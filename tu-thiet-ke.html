@@ -1,0 +1,2890 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trình chỉnh sửa - Khung Hình Bé Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Allison&family=Amatic+SC:wght@400;700&family=Bangers&family=Bevan&family=Black+Ops+One&family=Bungee&family=Chakra+Petch:wght@400;700&family=Charm:wght@400;700&family=Cinzel:wght@400;700&family=Coiny&family=Comfortaa:wght@400;700&family=Courier+Prime:wght@400;700&family=Fjalla+One&family=Great+Vibes&family=Grenze+Gotisch:wght@400;700&family=Itim&family=Philosopher:wght@400;700&family=Righteous&family=Shadows+Into+Light&family=Sriracha&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Lobster&family=Mali:wght@400;700&family=Pacifico&family=Patrick+Hand&family=Pangolin&family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Sedgwick+Ave&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root { 
+            --sidebar-width: 70px; 
+            --header-height: 60px;
+            --panel-width: 320px;
+            --primary: #6a11cb; 
+            --accent: #8e44ad; 
+            --bg-body: #f4f4f6;
+            --text-dark: #333;  
+            --purple-light: #f3e5f5;
+            --sidebar-text: #5d4037;
+            --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --shadow-floating: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        /* --- BỔ SUNG VÀO PHẦN CSS CHUNG (Dành cho PC) --- */
+
+        /* Mặc định ẩn thanh công cụ đáy của mobile đi */
+        .mobile-bottom-bar {
+            display: none; 
+        } 
+
+        * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg-body); height: 100vh; display: flex; overflow: hidden;
+        overscroll-behavior-y: none;}
+
+        /* --- SIDEBAR & PANELS --- */
+        .sidebar { 
+            width: var(--sidebar-width); background: #1a1b1c; display: flex; flex-direction: column; 
+            color: white; z-index: 200; flex-shrink: 0; height: 100vh;
+        }
+        .side-item { 
+            padding: 15px 5px; text-align: center; cursor: pointer; transition: 0.2s; 
+            font-size: 0.8rem; opacity: 0.7; font-weight: 600;  display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .side-item i { display: block; font-size: 1.5rem; margin-bottom: 8px; }
+        .side-item:hover, .side-item.active { opacity: 1; color: #00c4cc; background: #252627; }
+
+        .panels-container {
+            position: absolute; left: var(--sidebar-width); top: 0; bottom: 0;
+            width: 0; z-index: 190; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white; box-shadow: 5px 0 15px rgba(0,0,0,0.05); overflow: hidden;
+        }
+        .panels-container.open { width: var(--panel-width); }
+
+        .side-panel { 
+            width: var(--panel-width); height: 100%; padding: 20px; 
+            display: none; flex-direction: column; overflow-y: auto;
+        }
+        .side-panel.active { display: flex; }
+        
+        .panel-header { font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; color: var(--text-dark); }
+        .btn-luxury { 
+            width: 100%; padding: 12px; background: linear-gradient(135deg, var(--primary), var(--accent)); 
+            color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 4px 10px rgba(106, 17, 203, 0.3); transition: transform 0.2s;
+        }
+        .btn-luxury:active { transform: scale(0.98); }
+
+        /* --- MAIN LAYOUT --- */
+        .editor-main { 
+            flex: 1; display: flex; flex-direction: column; position: relative;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-left: 0; 
+            overflow: hidden; 
+        }
+        .editor-main.shifted { margin-left: var(--panel-width); }
+        .movable-element:not(.selected):hover {
+            outline: 2px solid #8b5cf6; 
+            cursor: pointer;
+        }        
+        .top-header {
+            position: relative;
+            height: var(--header-height); flex-shrink: 0;
+            background: repeating-linear-gradient(45deg, #6a11cb, #6a11cb 10px, #5f0dc0 10px, #5f0dc0 20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; padding: 0 30px; justify-content: space-between;
+            z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .brand-logo { 
+            font-weight: 900; font-size: 1.4rem; color: white; text-transform: uppercase; letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .header-actions { display: flex; gap: 15px; }
+        .btn-header {
+            padding: 8px 20px; border-radius: 30px; font-weight: 700; font-size: 0.85rem;
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .btn-header.back { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.8); color: white; backdrop-filter: blur(5px); }
+        .btn-header.back:hover { background: rgba(255,255,255,0.3); }
+        .btn-header.done { background: white; border: 2px solid white; color: var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .btn-header.done:hover { transform: translateY(-2px); }
+
+        /* --- TOOLBAR --- */
+        .context-toolbar-area {
+            position: absolute; 
+            top: 80px; /* Dưới header */
+            left: 0; width: 100%;
+            z-index: 900; pointer-events: none;
+            display: flex; justify-content: center;
+        }
+        
+        .smart-toolbar {
+            background: white; border-radius: 50px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            padding: 0 15px; display: none; align-items: center; gap: 8px;
+            height: 50px; border: 1px solid #e0e0e0;
+            pointer-events: auto; animation: slideDown 0.2s ease-out;
+            max-width: 95vw;
+            overflow-x: visible !important;
+            white-space: nowrap;
+        }
+        .smart-toolbar::-webkit-scrollbar { display: none; }
+        .smart-toolbar.active { display: flex; }
+
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Toolbar UI Elements */
+        .tool-divider { width: 1px; height: 24px; background: #ddd; margin: 0 4px; flex-shrink: 0;}
+        .tool-btn { 
+            background: none; border: none; cursor: pointer; color: var(--text-dark); 
+            font-size: 15px; width: 40px; height: 40px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            transition: 0.2s; position: relative; flex-shrink: 0;
+        }
+        .tool-btn:hover { background: #f5f0ff; color: var(--primary); }
+        .tool-btn.active-state { background: #e0d5f5 !important; color: #6a11cb !important; font-weight: bold; }
+        
+        .toolbar-input-group { 
+            display: flex; align-items: center; background: #f5f5f5; 
+            border-radius: 20px; padding: 2px; height: 32px; flex-shrink: 0;
+        }
+        .toolbar-input-group input { width: 40px; border: none; background: transparent; text-align: center; font-weight: 700; outline: none; font-size: 13px; }
+        .mini-btn { width: 28px; height: 28px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; background: transparent;}
+        .mini-btn:hover { background: #e0e0e0; }
+
+        /* --- CSS MỚI CHO POPUP PANEL (DẠNG BONG BÓNG) --- */
+        .popup-panel {
+            display: none;
+            position: fixed; /* Để cố định trên màn hình, vị trí sẽ do JS tính toán */
+            z-index: 1000;
+            width: 240px; /* Thu gọn chiều rộng cho đẹp */
+            background: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15); /* Đổ bóng mềm mại hơn */
+            border-radius: 16px; /* Bo góc tròn trịa */
+            padding: 20px;
+            border: 1px solid rgba(0,0,0,0.05);
+            
+            /* Animation hiện ra */
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            pointer-events: auto;
+        }
+
+        /* Class này sẽ được thêm vào khi mở bảng */
+        .popup-panel.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0); /* Trượt nhẹ lên vị trí chuẩn */
+        }
+        .element {
+            position: absolute; /* Bắt buộc để di chuyển */
+            cursor: move;       /* Hiện con trỏ hình mũi tên 4 chiều */
+            user-select: none;  /* QUAN TRỌNG: Chặn bôi đen văn bản để kéo được */
+            -webkit-user-select: none; /* Cho trình duyệt Chrome/Safari */
+            /* ... các thuộc tính cũ giữ nguyên ... */
+        }
+
+        /* Chỉ cho phép bôi đen/sửa chữ khi người dùng double click vào để sửa */
+        .element[contenteditable="true"] {
+            user-select: text;
+            cursor: text;
+            outline: 2px dashed #6a11cb; /* Viền để biết đang sửa */
+        }
+
+        /* Tùy chỉnh riêng cho bảng Layer nếu danh sách dài quá */
+/* --- CSS MỚI CHO BẢNG LAYER CỐ ĐỊNH BÊN PHẢI --- */
+        #layers-popup {
+            /* Định vị cố định bên phải màn hình */
+            position: fixed !important; 
+            right: 20px;
+            top: 100px; /* Cách header một khoảng đẹp */
+            bottom: 100px; /* Không chạm đáy */
+            left: auto !important; /* Bỏ tính toán JS cũ */
+            
+            width: 280px; /* Tăng kích thước cho dễ nhìn */
+            max-height: calc(100vh - 200px); /* Tự động co giãn theo màn hình */
+            overflow-y: auto;
+            
+            /* Giao diện */
+            background: white;
+            box-shadow: -5px 5px 20px rgba(0,0,0,0.1); /* Bóng đổ nhẹ */
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 15px;
+            display: none; /* Mặc định ẩn, JS sẽ bật class active */
+            z-index: 950;
+        }  
+        /* QUAN TRỌNG: Quy tắc này giúp bảng Layer hiện ra khi có class active */
+        /* Phải dùng ID (#) kết hợp class (.) để thắng được lệnh ẩn bên trên */
+        #layers-popup.active {
+            display: flex !important; /* Hiện bảng lên */
+            flex-direction: column;   /* Xếp nội dung dọc */
+            animation: fadeInRight 0.3s ease; /* Hiệu ứng trượt đẹp mắt */
+            opacity: 1;
+            transform: translateX(0);
+        }      
+        /* CSS cho nút đang được chọn (Active state) */
+        /* Lưu ý: Trong HTML bạn dùng class 'tool-btn', nên đổi tên class ở đây cho đúng */
+        .tool-btn.active {  /* Đã đổi từ .icon-btn.active thành .tool-btn.active */
+            background-color: #ede9fe;
+            color: #7c3aed;
+            border: 1px solid #7c3aed;
+            display: block;
+            animation: fadeInRight 0.3s ease;
+        }
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        /* Spacing Popup */
+        .spacing-control { margin-bottom: 15px; }
+        .spacing-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: 600; font-size: 0.85rem; }
+        .spacing-val-box { border: 1px solid #ddd; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; width: 45px; text-align: center; }
+
+        /* Layers Panel (New) */
+        .layers-list { max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+        ./* Style cho từng dòng layer mới */
+        .layer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Tách nội dung và nút bấm sang 2 bên */
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            gap: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }        
+        .layer-item:hover { background: #eee; border-color: #ddd; }
+        .layer-item.active { border-color: var(--primary); background: #f3e5f5; box-shadow: 0 2px 5px rgba(106, 17, 203, 0.15); }
+        .layer-icon { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: white; border-radius: 4px; border: 1px solid #ddd; font-size: 12px; color: #666; }
+        .layer-name { flex: 1; font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .layer-actions { display: flex; gap: 4px; }
+        .layer-btn { width: 24px; height: 24px; border: none; background: white; border-radius: 4px; cursor: pointer; color: #555; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        /* Thêm đoạn này vào CSS */
+        /* Phần nội dung bên trái (Thumbnail hoặc Text) */
+        .layer-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Căn giữa nội dung ảnh */
+            overflow: hidden;
+            padding-right: 10px;
+        }
+        /* Text thì căn trái cho dễ đọc */
+        .layer-info.is-text {
+            justify-content: flex-start;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #333;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .layer-thumb {
+            width: 30px; height: 30px; 
+            object-fit: cover; 
+            border-radius: 4px; 
+            border: 1px solid #ddd;
+            background: #fff;
+        }
+        /* Ảnh thumbnail */
+        .layer-thumb-large {
+            height: 50px;
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background: white;
+        }
+        /* Inputs & Sliders */
+        input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; background: #e0e0e0; border-radius: 2px; outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: white; border: 2px solid var(--primary); border-radius: 50%; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        /* --- TÌM VÀ THAY THẾ CSS CỦA WORKSPACE & WRAPPER --- */
+
+        .workspace {
+            flex: 1;
+            background: #eef2f6; /* Màu nền xám nhẹ của vùng làm việc */
+            
+            /* Dùng Grid để quản lý vùng cuộn tốt hơn Flexbox */
+            display: grid;
+            
+            /* Cho phép cuộn 2 chiều */
+            overflow: auto; 
+            
+            /* Tạo khoảng cách đệm để khi kéo sát lề vẫn thấy thoáng mắt */
+            padding: 50px; 
+            
+            position: relative;
+            
+            /* Sửa lỗi trên mobile */
+            touch-action: pan-x pan-y;
+        }
+
+        #artboard-wrapper {
+            /* Mấu chốt để căn giữa: margin auto trong grid sẽ tự căn giữa, 
+            nhưng khi zoom to nó sẽ tự đẩy thanh cuộn ra, không bị cắt hình */
+            margin: auto; 
+            
+            /* Loại bỏ màu nền và bóng đổ của wrapper để xoá "hình chữ nhật trắng/xám" thừa */
+            background: transparent; 
+            box-shadow: none; 
+            
+            /* Chỉ giữ bóng đổ cho chính cái khung hình (artboard) bên trong thôi */
+            flex-shrink: 0;
+            position: relative;
+            
+            /* Đảm bảo kích thước thay đổi mượt mà */
+            transition: width 0.1s, height 0.1s;
+        }
+
+        /* --- TÌM VÀ SỬA ĐOẠN NÀY --- */
+        #artboard {
+            width: 600px; height: 600px;
+            position: relative;
+            transform-origin: top left;
+            
+            /* --- PHẦN MỚI: TẠO NỀN CARO (TRONG SUỐT) --- */
+            background-color: #ffffff;
+            background-image: 
+                linear-gradient(45deg, #e0e0e0 25%, transparent 25%), 
+                linear-gradient(-45deg, #e0e0e0 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #ccc 75%), 
+                linear-gradient(-45deg, transparent 75%, #ccc 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            /* --------------------------------------------- */
+
+            /* Giữ nguyên bóng đổ để khung nổi lên */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+        }       
+         /* Elements */
+        .frame-layer { position: absolute; inset: 0; pointer-events: none; z-index: 50; width: 100%; height: 100%; object-fit: contain; }
+        .movable-element {
+            position: absolute;
+            cursor: grab;
+            display: inline-block;
+            
+            /* 1. QUAN TRỌNG: Chặn trình duyệt cuộn trang khi chạm vào */
+            touch-action: none !important; 
+            
+            /* 2. QUAN TRỌNG: Đổ màu nền "tàng hình" (trắng mờ 1%) 
+            Điều này giúp điện thoại nhận diện được vùng chạm giống như chạm vào một tấm ảnh */
+            background-color: rgba(255, 255, 255, 0.01) !important;
+            
+            z-index: 20;
+            transform-origin: center;
+        }        
+        .movable-element.selected { outline: 2px solid var(--primary); }
+        .resize-handle {
+            position: absolute; 
+            width: 24px;       /* Tăng từ 12px lên 24px (To gấp đôi) */
+            height: 24px;      /* Tăng từ 12px lên 24px */
+            background: white;
+            border: 2px solid var(--primary); /* Viền dày hơn chút cho rõ (2px) */
+            border-radius: 50%;
+            z-index: 1001; 
+            display: none; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3); /* Bóng đổ đậm hơn xíu */
+        }        
+        /* Hiển thị khi được chọn */
+        .movable-element.selected .resize-handle { display: block; }
+        /* Hiển thị khi được chọn VÀ KHÔNG BỊ KHOÁ */
+        .movable-element.selected:not([data-locked="true"]) .resize-handle { display: block; }
+       .handle-n { top: -6px; left: 50%; transform: translateX(-50%); cursor: n-resize; } /* Trên */
+        .handle-s { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: s-resize; } /* Dưới */
+        .handle-e { right: -6px; top: 50%; transform: translateY(-50%); cursor: e-resize; } /* Phải */
+        .handle-w { left: -6px; top: 50%; transform: translateY(-50%); cursor: w-resize; } /* Trái */
+        .lock-indicator {
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            background: #ff4d4d; color: white; padding: 4px 8px; border-radius: 12px;
+            font-size: 10px; display: none; z-index: 1002; pointer-events: none;
+        }
+        .movable-element[data-locked="true"].selected .lock-indicator { display: block; }
+        /* Khi bị khoá, đường viền sẽ màu đỏ thay vì tím */
+        .movable-element[data-locked="true"].selected { outline: 2px solid #ff4d4d; }
+        .movable-element.selected .resize-handle { display: block; }
+        /* --- CSS MỚI CHO VĂN BẢN (Thay thế toàn bộ CSS text-element cũ) --- */
+
+        /* 1. Trạng thái bình thường: CHỈ ĐỂ NHÌN (giúp kéo thả mượt 100%) */
+        .text-element {
+            min-width: 50px;
+            max-width: 100%;
+            white-space: pre-wrap;
+            word-break: break-word;
+            height: 100%;
+            width: 100%;
+            
+            /* --- SAO CHÉP LOGIC CỦA ẢNH --- */
+            /* Biến chữ thành "vật thể chết" giống như thẻ <img>. 
+            Khi chạm vào chữ, nó sẽ xuyên qua và trúng vào .movable-element bên dưới 
+            -> Kích hoạt kéo thả ngay lập tức */
+            pointer-events: none !important; 
+            
+            outline: none;
+            padding: 10px;
+            position: relative; 
+            z-index: 1;
+        }
+
+        /* --- NGOẠI LỆ DUY NHẤT --- */
+        /* Chỉ khi nào vào chế độ sửa (bấm nút bút chì) thì mới cho phép tương tác với chữ */
+        .text-element[contenteditable="true"] {
+            pointer-events: auto !important; /* Bật lại cảm ứng để gõ chữ */
+            user-select: text;
+            -webkit-user-select: text;
+            cursor: text;
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px dashed #6a11cb;
+        }        
+        /* --- ZOOM BAR --- */
+        .zoom-container {
+            position: fixed; bottom: 25px; right: 30px; z-index: 800;
+            background: white; padding: 8px 15px; border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 10px;
+            border: 1px solid #eee;
+        }
+        .zoom-btn { background: none; border: none; font-size: 1rem; cursor: pointer; color: #555; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .zoom-val-wrapper { font-weight: 700; font-size: 0.9rem; color: #333; min-width: 60px; text-align: center; }
+        /* ĐOẠN MỚI (ĐÃ SỬA) */
+        input[type=range].zoom-slider { 
+            width: 150px; 
+            /* Dùng màu xám mặc định, ta sẽ tô màu tím bằng JS sau */
+            background: #e0e0e0; 
+            height: 6px; 
+            border-radius: 5px; 
+            outline: none;
+        }
+        /* Thêm style cho cục tròn kéo để đẹp hơn */
+        input[type=range].zoom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px; 
+            height: 18px; 
+            background: var(--primary); /* Cục kéo màu tím */
+            border: 2px solid white; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s;
+        }
+        .modal-overlay.open { display: flex; opacity: 1; }
+        .custom-modal {
+            background: #fff; width: 400px; border-radius: 20px; padding: 30px;
+            text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.open .custom-modal { transform: scale(1); }
+        .modal-icon { width: 60px; height: 60px; background: var(--purple-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 15px; }
+        .modal-title { font-size: 1.3rem; font-weight: 800; color: #333; margin-bottom: 10px; }
+        .modal-desc { color: #666; font-size: 0.9rem; margin-bottom: 25px; line-height: 1.5; }
+        .modal-actions { display: flex; gap: 15px; justify-content: center; }
+        .btn-modal { flex: 1; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; font-size: 0.9rem; }
+        .btn-cancel { background: #f0f0f0; color: #555; }
+        .btn-confirm { background: var(--primary); color: white; }
+
+        /* --- UTILS --- */
+        .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
+        .color-dot { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid #eee; }
+        .section-title { font-size: 0.9rem; font-weight: 700; margin-top: 20px; display: flex; justify-content: space-between; }
+        .see-all { color: var(--accent); font-size: 0.8rem; cursor: pointer; }
+        #upload-history { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
+        .thumb { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #eee; }
+
+        .border-styles { display: flex; gap: 5px; margin-bottom: 10px; justify-content: space-between; }
+        .border-opt { width: 35px; height: 35px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .border-opt.active { border-color: var(--primary); background: #f0ebfa; }
+        .dashed-line { width: 20px; height: 2px; background: #333; }
+
+        @media (max-width: 768px) {
+            /* Thu nhỏ thanh bên trái */
+            .sidebar { width: 50px; display: none !important;}
+            .side-item { padding: 15px 0; font-size: 0.55rem; }
+            .side-item i { font-size: 1.2rem; margin-bottom: 5px; }
+            .editor-main { margin-left: 0 !important; }
+            /* --- STYLE CHO THANH CÔNG CỤ ĐÁY MỚI --- */
+            .mobile-bottom-bar {
+                position: fixed;
+                bottom: 0; left: 0; width: 100%;
+                height: 60px;
+                background: white;
+                display: flex !important;
+                align-items: center;
+                justify-content: space-around; /* Chia đều khoảng cách */
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+                z-index: 900;
+                border-top: 1px solid #eee;
+                padding-bottom: 5px; /* Tránh chạm mép màn hình iphone đời mới */
+            }
+
+            .bottom-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: #555;
+                font-size: 0.7rem;
+                font-weight: 600;
+                gap: 4px;
+                width: 100%; height: 100%;
+            }
+
+            .bottom-item i {
+                font-size: 1.4rem;
+                color: var(--primary);
+                margin-bottom: 2px;
+            }
+
+            .bottom-item:active {
+                background: #f5f5f5;
+                transform: scale(0.95);
+            }
+            /* Điều chỉnh khung Panel trượt ra */
+        /* --- SỬA LỖI PANEL TRÊN MOBILE --- */
+        .panels-container { 
+            left: 0 !important; /* Bỏ lề trái vì sidebar đã ẩn */
+            display: none; /* Bỏ !important để JS còn tác động được */
+            width: 100% !important;
+            
+            /* Căn vị trí cho đẹp trên điện thoại */
+            top: auto !important; /* Nằm dưới Header trên */
+            bottom: 60px !important; /* Nằm trên Thanh đáy */
+            height: 45vh !important;
+            
+            background: white;
+            z-index: 1500;
+        }
+
+        /* Khi có class open thì hiện lên */
+        .panels-container.open { 
+            display: block !important; 
+            animation: slideUp 0.3s ease-out; /* Thêm hiệu ứng trượt lên cho mượt */
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }            
+            /* --- CSS CHO HEADER TRÊN ĐIỆN THOẠI (Dán đè vào trong @media max-width 768px) --- */
+    
+            .top-header { 
+                padding: 0; /* Bỏ padding để nút dính sát lề đẹp hơn */
+                height: 40px; 
+                
+                /* Dùng Flex để căn giữa nhóm Undo/Redo */
+                display: flex;
+                align-items: center;
+                justify-content: center; /* Căn giữa nút Undo/Redo */
+                position: relative; /* Làm mốc toạ độ cho nút Quay lại và Xong */
+            }
+
+            .brand-logo { 
+                display: none; /* Ẩn logo cho rộng chỗ */
+            }
+
+            /* Nhóm Undo/Redo nằm chính giữa màn hình */
+            .undo-redo-group { 
+                position: static; /* Reset vị trí để tuân theo Flexbox ở trên */
+                transform: none;
+                display: flex;
+                gap: 15px; /* Khoảng cách giữa 2 nút cong */
+                z-index: 10;
+            }
+            
+            .btn-undo-redo {
+                width: 28px; height: 28px; /* Kích thước nút undo vừa ngón tay */
+                background: rgba(255,255,255,0.2);
+            }
+
+            /* --- XỬ LÝ TÁCH NÚT QUAY LẠI VÀ NÚT XONG --- */
+            
+            /* Wrapper bao quanh 2 nút này */
+            .header-actions {
+                position: absolute;
+                top: 0; left: 0; width: 100%; height: 100%;
+                /* QUAN TRỌNG: Cho phép bấm xuyên qua vùng trống để không che nút Undo ở giữa */
+                pointer-events: none; 
+            }
+
+            /* Thiết lập chung cho cả 2 nút */
+            .btn-header {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%); /* Căn giữa theo chiều dọc */
+                pointer-events: auto; /* Bật lại khả năng bấm cho nút */
+                z-index: 20;
+                font-size: 0.65rem;
+                padding: 0 10px; height: 26px; /* Kích thước gọn gàng */
+            }
+
+            /* 1. Nút QUAY LẠI dính lề TRÁI */
+            .btn-header.back {
+                left: 10px; 
+                /* Giữ nguyên giao diện cũ */
+                background: rgba(255,255,255,0.15); 
+                border: 1px solid rgba(255,255,255,0.5);
+            }
+            
+            /* Chỉ hiện icon mũi tên, ẩn chữ "Quay lại" nếu màn hình quá bé (tuỳ chọn) */
+            .btn-header.back span { display: none; } 
+            /* Nếu muốn hiện chữ thì xoá dòng trên, nhưng ẩn đi sẽ đỡ chật hơn */
+            .btn-header.back i { margin: 0; font-size: 1rem; }
+
+            /* 2. Nút XONG dính lề PHẢI */
+            .btn-header.done {
+                right: 10px;
+                background: white; 
+                color: var(--primary);
+            }
+            
+            .btn-header i { font-size: 0.8rem; }
+            .smart-toolbar { 
+                top: 60px; 
+                max-width: 95vw;
+                
+                /* QUAN TRỌNG: Đổi visible thành auto để cho phép cuộn */
+                overflow-x: auto !important; 
+                
+                /* Giúp cuộn mượt mà trên iPhone (iOS) */
+                -webkit-overflow-scrolling: touch; 
+                
+                justify-content: flex-start;
+                padding: 0 10px;
+                
+                /* Ẩn thanh cuộn đi cho đẹp (nhưng vẫn vuốt được) */
+                scrollbar-width: none; /* Cho Firefox */
+            }
+
+            /* Ẩn thanh cuộn cho Chrome/Safari/Edge */
+            .smart-toolbar::-webkit-scrollbar {
+                display: none;
+            }            
+            /* --- Dán vào trong @media (max-width: 768px) --- */
+
+            .workspace {
+                /* ĐIỆN THOẠI: Tắt thanh cuộn để nhường quyền cho ngón tay */
+                overflow: hidden !important; 
+                touch-action: none; 
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #eef2f6; 
+                height: calc(100vh - 40px - 60px) !important; /* Trừ Header và Bottom Bar */
+                margin-bottom: 60px; /* Đẩy lên */
+            }
+
+            /* Đảm bảo khung bao này linh hoạt trên mobile */
+            #artboard-wrapper {
+                margin: 0 !important;
+                width: auto !important;
+                height: auto !important;
+                transform-origin: 0 0; /* Quan trọng cho thuật toán Matrix */
+                transition: none !important; /* Tắt hiệu ứng trễ để zoom mượt */
+            }
+
+            /* Ẩn thanh zoom cũ đi */
+            .zoom-container { 
+                display: none !important;
+            }
+            
+            .zoom-slider {
+                width: 80px !important; /* Quan trọng: Ngắn lại để đỡ chiếm chỗ */
+                height: 4px !important;
+            }
+
+            /* Thu nhỏ nút +/- */
+            .zoom-btn {
+                width: 20px; height: 20px; 
+                font-size: 0.8rem; /* Icon nhỏ lại */
+            }
+
+            /* Thu nhỏ ô nhập số */
+            .zoom-val-wrapper input {
+                width: 35px !important; /* Ô số gọn lại */
+                font-size: 0.8rem !important; /* Cỡ số nhỏ vừa mắt */
+            }
+            
+            .zoom-val-wrapper span {
+                font-size: 0.8rem; /* Ký tự % nhỏ theo */
+            }  
+            /* --- SỬA LỖI MENU FONT TRÊN ĐIỆN THOẠI --- */
+            /* Buộc danh sách font phải thoát ra khỏi thanh trượt */
+            .font-dropdown-list {
+                position: fixed !important; /* Cố định vào màn hình thay vì dính vào nút */
+                top: auto !important;       /* Bỏ căn lề trên */
+                bottom: 120px !important;   /* Nằm phía trên thanh công cụ một chút */
+                left: 50% !important;       /* Căn giữa màn hình */
+                transform: translateX(-50%);
+                
+                width: 85% !important;      /* Rộng 85% màn hình cho dễ bấm */
+                max-height: 50vh !important; /* Cao tối đa một nửa màn hình */
+                
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3) !important;
+                border: 2px solid var(--primary); /* Thêm viền tím cho nổi bật */
+                
+                /* Mẹo nhỏ: Thêm cái bóng cực lớn để làm tối màn hình phía sau */
+                box-shadow: 0 5px 20px rgba(0,0,0,0.2), 0 0 0 1000px rgba(0,0,0,0.5) !important;
+            }
+
+            /* Tăng kích thước chữ trong danh sách cho dễ bấm bằng ngón tay */
+            .font-option {
+                padding: 15px !important; /* Nút to hơn */
+                font-size: 16px !important; /* Chữ to hơn */
+                border-bottom: 1px solid #eee;
+                text-align: center; /* Căn giữa chữ */
+            }
+        }        
+        .layer-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .layer-move-btn {
+            border-radius: 50%;
+            width: 36px;  /* Kích thước to dễ bấm */
+            height: 36px;
+            border: 1px solid #e0e0e0;
+            background: #ffffff;
+            color: #555;
+            
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            flex-shrink: 0; /* Không bị co lại khi tên quá dài */
+        }
+        .layer-move-btn:hover:not(:disabled) {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.15); /* Phóng to nhẹ */
+            border-color: var(--primary);
+        }
+        .layer-move-btn:disabled {
+            opacity: 0.3;
+            cursor: default;
+            background: #f5f5f5;
+            box-shadow: none;
+            transform: none;
+        }
+        .layer-move-btn:hover { background: var(--primary); color: white; }
+        .layer-item.drag-over-top {
+            margin-top: 20px; /* Tạo khe hở */
+            border-top: 2px solid #007bff; /* Vạch báo hiệu */
+        }
+        .layer-item.drag-over-bottom {
+            margin-bottom: 20px; /* Tạo khe hở */
+            border-bottom: 2px solid #007bff; /* Vạch báo hiệu */
+        }
+        /* Style khi đang kéo một lớp */
+        .layer-item.dragging {
+            opacity: 0.4;
+            background: #eef;
+        }
+        /* Cho phép con trỏ chuột hiển thị dạng nắm tay khi di chuột vào layer */
+        .layer-item {
+            cursor: grab;
+        }
+        .layer-item:active {
+            cursor: grabbing;
+        }
+        /* --- CSS CHO BẢNG THÔNG BÁO LỖI --- */
+        .pc-warning {
+            display: none; /* Mặc định ẩn (cho điện thoại) */
+            background: #fff3cd; /* Màu nền vàng nhạt */
+            color: #856404;      /* Màu chữ vàng đậm */
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .pc-warning i {
+            color: #ffcc00; /* Màu icon */
+            margin-right: 5px;
+        }
+
+        /* Chỉ hiện khi màn hình rộng hơn 768px (Tức là Máy tính/Laptop) */
+        @media (min-width: 769px) {
+            .pc-warning {
+                display: block; /* Hiện lên */
+            }
+        }
+        /* --- CSS CHO POPUP THÔNG BÁO MỚI --- */
+        .welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(106, 17, 203, 0.2); /* Màu tím nhạt trong suốt */
+            backdrop-filter: blur(8px); /* Làm mờ hậu cảnh thời thượng */
+            z-index: 9999; /* Luôn nổi trên cùng */
+            display: flex; /* Dùng Flex để căn giữa tuyệt đối */
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+        }
+
+        /* Class này sẽ được JS thêm vào để hiện bảng */
+        .welcome-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .welcome-box {
+            background: white;
+            width: 400px;
+            max-width: 90%;
+            padding: 30px;
+            border-radius: 25px; /* Bo góc tròn trịa dễ thương */
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(106, 17, 203, 0.15);
+            border: 2px solid #fff;
+            transform: scale(0.8);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Hiệu ứng nảy */
+        }
+
+        .welcome-overlay.show .welcome-box {
+            transform: scale(1);
+        }
+
+        .welcome-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #6a11cb;
+            position: relative;
+            display: inline-block;
+        }
+
+        .heart-anim {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            font-size: 1.5rem;
+            color: #ff4d4d;
+            animation: floatHeart 2s infinite ease-in-out;
+        }
+
+        @keyframes floatHeart {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .welcome-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #333;
+            margin: 0 0 15px 0;
+        }
+
+        .welcome-content {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .key-tag {
+            background: #f0ebfa;
+            border: 1px solid #d1c4e9;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            color: #6a11cb;
+            font-size: 0.85rem;
+        }
+
+        .welcome-btn {
+            background: linear-gradient(135deg, #6a11cb, #8e44ad);
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(106, 17, 203, 0.3);
+        }
+
+        .welcome-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(106, 17, 203, 0.4);
+        }
+
+        .welcome-btn:active {
+            transform: scale(0.95);
+        }
+        /* --- THÊM VÀO CUỐI PHẦN STYLE --- */
+
+        /* Giao diện nút xoay */
+        .rotate-handle {
+            position: absolute;
+            top: -40px; /* Cách đỉnh văn bản một đoạn để dễ cầm */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            background: white;
+            border: 1px solid #6a11cb;
+            border-radius: 50%;
+            cursor: grab; /* Hình bàn tay mở */
+            z-index: 1005; /* Luôn nổi lên trên cùng */
+            display: none; /* Mặc định ẩn */
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Biểu tượng mũi tên cong bên trong nút xoay */
+        .rotate-handle::before {
+            content: '\f2f1'; /* Mã icon xoay của FontAwesome */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            font-size: 12px;
+            color: #6a11cb;
+        }
+
+        /* Đường kẻ nối từ văn bản lên nút xoay */
+        .rotate-handle::after {
+            content: '';
+            position: absolute;
+            bottom: -20px; /* Độ dài đường kẻ nối */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 20px;
+            background: #6a11cb;
+            pointer-events: none;
+        }
+
+        /* Khi đang xoay thì đổi con trỏ chuột thành nắm tay */
+        .rotate-handle:active {
+            cursor: grabbing;
+            background: #6a11cb;
+        }
+        .rotate-handle:active::before {
+            color: white;
+        }
+
+        /* Chỉ hiện nút xoay khi đối tượng được chọn (tương tự như nút co giãn) */
+        .movable-element.selected .rotate-handle {
+            display: flex;
+        }
+        .undo-redo-group {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%); /* Căn chính giữa tuyệt đối */
+            display: flex;
+            gap: 15px;
+            z-index: 101;
+        }
+
+        /* Style cho từng nút Undo/Redo */
+        .btn-undo-redo {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-undo-redo:hover:not(:disabled) {
+            background: white;
+            color: #6a11cb;
+            transform: scale(1.1);
+        }
+
+        /* Khi không undo được thì làm mờ đi */
+        .btn-undo-redo:disabled {
+            opacity: 0.3;
+            cursor: default;
+            background: transparent;
+            border-color: transparent;
+        }
+        /* --- CSS QUAN TRỌNG: BIẾN KHUNG THÀNH LỚP PHỦ (OVERLAY) --- */
+
+        /* 1. Định vị khung mẫu nằm đè lên tất cả */
+        .movable-element[data-type="frame"] {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            transform: none !important; /* Không cho xoay hay dịch chuyển khung nền */
+            
+            /* Z-Index cao nhất để nằm trên ảnh người dùng thêm vào */
+            
+            /* QUAN TRỌNG: Cho phép bấm xuyên qua khung để kéo ảnh bên dưới */
+            pointer-events: none !important; 
+            
+            /* Xóa viền tím khi chọn (vì khung này không được chọn) */
+            outline: none !important;
+        }
+
+        /* 2. Ảnh bên trong khung phải dãn kín */
+        .movable-element[data-type="frame"] img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: fill !important; /* Bắt buộc ảnh dãn ra lấp đầy khung */
+        }
+
+        /* Thay.ten-vung-chon bằng tên bạn tìm thấy ở Bước 1 */
+        .layers-container {
+            /* 1. Tạo màu nền trắng cơ bản */
+            background-color: #ffffff; 
+
+            /* 2. Vẽ các ô vuông xám nhạt xen kẽ */
+            background-image: conic-gradient(
+                #eeeeee 90deg, 
+                transparent 90deg 180deg, 
+                #eeeeee 180deg 270deg, 
+                transparent 270deg
+            );
+
+            /* 3. Định nghĩa kích thước 1 ô caro (ví dụ 20px) */
+            background-size: 40px 40px; 
+
+            /* 4. Cho phép lặp lại vô tận như giấy dán tường */
+            background-repeat: repeat;
+        }
+        /* === CSS CHO VÙNG LÀM MỜ ẢNH DƯ === */
+        /* === [ĐÃ SỬA] VÙNG LÀM MỜ NHẸ NHÀNG === */
+        .vung-lam-mo {
+            /* 1. Vị trí phủ kín khung artboard */
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            
+            /* 2. Z-index = 50: 
+            Cao hơn ảnh người dùng (z=20) -> Để làm tối ảnh.
+            Thấp hơn khung mẫu (z=9999) -> Để khung vẫn sáng.
+            Thấp hơn thanh công cụ/header (z=100+) -> Không che mất giao diện.
+            */
+            z-index: 50; 
+            
+            /* 3. Cho phép chuột bấm xuyên qua (QUAN TRỌNG) */
+            pointer-events: none;
+            
+            /* 4. CHỈNH LẠI MÀU SẮC (MẤU CHỐT Ở ĐÂY):
+            - Thay vì 0.5 (đen thui), mình để 0.15 (đen nhẹ).
+            - Giúp phân biệt vùng thừa nhưng không làm tối cả màn hình.
+            */
+            box-shadow: 0 0 0 5000px rgba(0, 0, 0, 0.15); 
+            
+            /* 5. Thêm viền đứt đoạn sáng màu để làm nổi bật vùng an toàn */
+            border: 2px dashed rgba(255, 255, 255, 0.8);
+        }
+        /* Đảm bảo vùng làm việc hiển thị được phần tối này */
+        .workspace {
+            /* Cho phép hiển thị phần tràn ra ngoài (để thấy được vùng tối) */
+            overflow: auto !important; 
+        }
+
+        /* Đảm bảo wrapper không cắt mất cái bóng */
+        #artboard-wrapper {
+            overflow: visible !important;
+        }
+        ..resize-handle.handle-e, .resize-handle.handle-w {
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;      /* Tăng độ rộng từ 8px lên 12px */
+            height: 30px;     /* Tăng chiều cao từ 24px lên 30px */
+            border-radius: 6px;
+            background: white;
+            border: 1px solid var(--primary);
+            cursor: col-resize; 
+            display: block !important; 
+        }        
+        .resize-handle.handle-e { right: -8px; }
+        .resize-handle.handle-w { left: -8px; }
+        .movable-element[data-type="text"] .resize-handle.handle-n,
+        .movable-element[data-type="text"] .resize-handle.handle-s {
+            display: none !important; 
+        }
+        .movable-element[data-type="text"] .resize-handle.tr,
+        .movable-element[data-type="text"] .resize-handle.tl,
+        .movable-element[data-type="text"] .resize-handle.br,
+        .movable-element[data-type="text"] .resize-handle.bl {
+            display: none !important;
+        }
+        .movable-element[data-type="text"] {
+            width: auto; /* Mặc định */
+            min-width: 50px; /* Không được nhỏ quá */
+            height: auto !important; /* Chiều cao luôn tự động theo chữ */
+        }
+        /* --- CSS CHO MENU CHỌN FONT --- */
+        .font-selector-group {
+            position: relative; /* Để danh sách con bám theo */
+            background: #f5f5f5;
+            border-radius: 20px;
+            padding: 0 15px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 140px; /* Rộng hơn chút để chứa tên dài */
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: 0.2s;
+            user-select: none;
+        }
+        .font-selector-group:hover {
+            background: white;
+            border-color: var(--primary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Danh sách xổ xuống */
+        .font-dropdown-list {
+            display: none; /* Mặc định ẩn */
+            position: absolute;
+            top: 40px; /* Cách nút bấm 1 đoạn */
+            left: 0;
+            width: 180px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            padding: 5px;
+            z-index: 2000;
+            
+            /* QUAN TRỌNG: Tạo thanh cuộn nếu danh sách quá dài */
+            max-height: 300px; 
+            overflow-y: auto;
+            border: 1px solid #eee;
+        }
+
+        /* Từng dòng font */
+        .font-option {
+            padding: 8px 12px;
+            font-size: 14px;
+            color: #333;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .font-option:hover {
+            background: var(--purple-light);
+            color: var(--primary);
+        }
+
+        /* Hiển thị menu khi có class 'show' */
+        .font-dropdown-list.show {
+            display: block;
+            animation: fadeIn 0.2s;
+        }
+        /* --- CSS CHO MÀN HÌNH LƯU ẢNH --- */
+        .saving-screen {
+            display: none; /* Mặc định ẩn */
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95); /* Nền trắng kính mờ */
+            z-index: 99999; /* Cao nhất vũ trụ */
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .saving-box {
+            text-align: center;
+            position: relative;
+            width: 300px;
+        }
+
+        /* Icon máy ảnh */
+        .saving-icon-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .saving-main-icon {
+            font-size: 4rem;
+            background: linear-gradient(135deg, #6a11cb, #8e44ad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: bounce 1s infinite alternate;
+        }
+
+        /* Hiệu ứng đèn Flash nháy */
+        .saving-flash {
+            position: absolute;
+            top: -10px; right: -10px;
+            font-size: 1.5rem;
+            color: #ffeb3b;
+            animation: flash 0.8s infinite;
+        }
+
+        .saving-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin: 0;
+            font-weight: 800;
+        }
+
+        .saving-subtitle {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Sticker bay xung quanh */
+        .float-decor {
+            position: absolute;
+            font-size: 1.2rem;
+            opacity: 0; 
+        }
+
+        .d1 { top: 0; left: 20px; color: #ff7675; animation: popUp 2s infinite; }
+        .d2 { bottom: 20px; right: 40px; color: #ffeaa7; animation: popUp 2s infinite 0.5s; }
+        .d3 { top: 30px; right: 20px; color: #74b9ff; animation: popUp 2s infinite 1s; }
+        .d4 { bottom: -10px; left: 50px; color: #fd79a8; animation: popUp 2s infinite 1.5s; font-size: 1.5rem; }
+
+        /* --- CÁC HIỆU ỨNG HOẠT HÌNH --- */
+        @keyframes flash {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+        @keyframes popUp {
+            0% { opacity: 0; transform: translateY(20px) scale(0.5); }
+            50% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-20px) scale(1.2); }
+        }
+        /* --- HIỆU ỨNG LÀM NỔI BẬT ĐỐI TƯỢNG MỚI --- */
+        @keyframes pulse-highlight {
+            0% { 
+                box-shadow: 0 0 0 0 rgba(106, 17, 203, 0.7); 
+                outline: 3px solid rgba(106, 17, 203, 1);
+            }
+            70% { 
+                box-shadow: 0 0 0 20px rgba(106, 17, 203, 0); 
+                outline: 3px solid rgba(106, 17, 203, 0.5);
+            }
+            100% { 
+                box-shadow: 0 0 0 0 rgba(106, 17, 203, 0); 
+                outline: 3px solid rgba(106, 17, 203, 1);
+            }
+        }
+
+        .new-item-highlight {
+            animation: pulse-highlight 1.5s infinite;
+            z-index: 9999 !important; /* Đẩy lên trên cùng để dễ thấy */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="side-item" onclick="togglePanel('upload')">
+            <i class="fa fa-cloud-upload-alt"></i>Tải lên
+        </div>
+        <div class="side-item" onclick="togglePanel('text')">
+            <i class="fa fa-font"></i>Văn bản
+        </div>
+        <div class="side-item" onclick="togglePanel('layers')">
+            <i class="fa fa-layer-group"></i>Lớp
+        </div>
+    </div>
+    <div class="mobile-bottom-bar">
+        <div class="bottom-item" onclick="document.getElementById('file-input').click()">
+            <i class="fa fa-cloud-upload-alt"></i>
+            <span>Tải ảnh</span>
+        </div>
+        <div class="bottom-item" onclick="addText()">
+            <i class="fa fa-font"></i>
+            <span>Thêm chữ</span>
+        </div>
+        <div class="bottom-item" onclick="togglePanel('layers')">
+            <i class="fa fa-layer-group"></i><span>Lớp</span>
+        </div>
+    </div>
+
+    <div class="panels-container" id="main-panels">
+        <div class="side-panel" id="panel-upload">
+            <div class="panel-header">Tải lên</div>
+            <input type="file" id="file-input" hidden multiple onchange="handleUpload(event)">
+            <button class="btn-luxury" onclick="document.getElementById('file-input').click()">
+                <i class="fa fa-plus"></i> CHỌN ẢNH TỪ MÁY
+            </button>
+            <div id="upload-history"></div>
+        </div>
+
+        <div class="side-panel" id="panel-text">
+            <div class="panel-header">Văn bản</div>
+            <button class="btn-luxury" onclick="addText()">
+                <i class="fa fa-heading"></i> THÊM TIÊU ĐỀ
+            </button>
+        </div>
+        <div class="side-panel" id="panel-layers">
+            <div class="panel-header">Lớp đối tượng</div>
+            <div style="font-size: 0.8rem; color: #666; margin-bottom: 15px;">Kéo để sắp xếp thứ tự hiển thị</div>
+            
+            <div class="layers-list" id="layers-list-container">
+                </div>
+        </div>
+        <div class="side-panel" id="panel-color">
+            <div class="panel-header">Màu chữ</div>
+            <div class="section-title">Màu mặc định <span class="see-all" onclick="expandColors('solid')">Xem tất cả</span></div>
+            <div class="color-grid" id="solid-colors"></div>
+            <div class="section-title">Gradient <span class="see-all" onclick="expandColors('gradient')">Xem tất cả</span></div>
+            <div class="color-grid" id="gradient-colors"></div>
+        </div>
+    </div>
+
+    <div class="editor-main" id="editor-main">
+        <div class="top-header">
+            <div class="brand-logo">KHUNG HÌNH BÉ</div>
+            <div class="undo-redo-group">
+                <button class="btn-undo-redo" id="btn-undo" onclick="undo()" title="Hoàn tác (Ctrl+Z)" disabled>
+                    <i class="fa fa-undo"></i> </button>
+                <button class="btn-undo-redo" id="btn-redo" onclick="redo()" title="Làm lại (Ctrl+Y)" disabled>
+                    <i class="fa fa-redo"></i> </button>
+            </div>            
+            <div class="header-actions">
+                <button class="btn-header back" onclick="openModal('back')">
+                    <i class="fa fa-chevron-left"></i> <span>Quay lại</span>
+                </button>
+                <button class="btn-header done" onclick="openModal('done')">
+                    Xong
+                </button>
+            </div>
+        </div>
+
+        <div class="context-toolbar-area">
+            <div class="smart-toolbar" id="img-toolbar">
+                <div class="tool-divider"></div>
+                <button class="tool-btn" title="Độ trong suốt" onclick="togglePopup('opacity-popup')"><i class="fa fa-adjust"></i></button>
+                <button class="tool-btn" title="Viền" onclick="togglePopup('border-popup')"><i class="fa fa-border-style"></i></button>
+                <div class="tool-divider"></div>
+                <button class="tool-btn" id="btn-lock" onclick="toggleLock()" title="Khoá/Mở khoá">
+                    <i class="fa fa-unlock"></i>
+                </button>
+                <button class="tool-btn" title="Xoá" onclick="deleteSelected()"><i class="fa fa-trash" style="color:#ff4d4d"></i></button>
+            </div>
+
+            <div class="smart-toolbar" id="text-toolbar">
+                <button class="tool-btn" onclick="triggerEditMode()" title="Sửa nội dung">
+                    <i class="fa fa-pen"></i>
+                </button>
+                <div class="font-selector-group" onclick="toggleFontMenu(event)">
+                    <span id="display-font-name" style="font-family: 'Montserrat', sans-serif;">Montserrat</span>
+                    <i class="fa fa-chevron-down" style="font-size:10px; color:#666"></i>
+
+                    <div class="font-dropdown-list" id="font-list-menu">
+                        <div class="font-option" style="font-family: 'Times New Roman', serif" onclick="changeFont('Times New Roman')">Times New Roman</div>
+                        <div class="font-option" style="font-family: 'Montserrat', sans-serif" onclick="changeFont('Montserrat')">Montserrat (Gốc)</div>
+                        <div class="font-option" style="font-family: 'Lobster', cursive" onclick="changeFont('Lobster')">Lobster</div>
+                        <div class="font-option" style="font-family: 'Pacifico', cursive" onclick="changeFont('Pacifico')">Pacifico</div>
+                        <div class="font-option" style="font-family: 'Dancing Script', cursive" onclick="changeFont('Dancing Script')">Dancing Script</div>
+                        <div class="font-option" style="font-family: 'Mali', cursive" onclick="changeFont('Mali')">Mali Cute</div>
+                        <div class="font-option" style="font-family: 'Patrick Hand', cursive" onclick="changeFont('Patrick Hand')">Patrick Hand</div>
+                        <div class="font-option" style="font-family: 'Pangolin', cursive" onclick="changeFont('Pangolin')">Pangolin</div>
+                        <div class="font-option" style="font-family: 'Playfair Display', serif" onclick="changeFont('Playfair Display')">Playfair Display</div>
+                        <div class="font-option" style="font-family: 'Sedgwick Ave', cursive" onclick="changeFont('Sedgwick Ave')">Sedgwick Ave</div>
+                        <div class="font-option" style="font-family: 'VT323', monospace" onclick="changeFont('VT323')">Pixel Game</div>
+                        <div class="font-option" style="font-family: 'Itim', cursive" onclick="changeFont('Itim')">Itim (Vui nhộn)</div>
+                        <div class="font-option" style="font-family: 'Coiny', cursive" onclick="changeFont('Coiny')">Coiny (Béo tròn)</div>
+                        <div class="font-option" style="font-family: 'Amatic SC', cursive" onclick="changeFont('Amatic SC')">Amatic (Viết tay)</div>
+                        <div class="font-option" style="font-family: 'Comfortaa', cursive" onclick="changeFont('Comfortaa')">Comfortaa (Bo tròn)</div>
+                        <div class="font-option" style="font-family: 'Sriracha', cursive" onclick="changeFont('Sriracha')">Sriracha (Bút dạ)</div>
+
+                        <div class="font-option" style="font-family: 'Cinzel', serif" onclick="changeFont('Cinzel')">Cinzel (Điện ảnh)</div>
+                        <div class="font-option" style="font-family: 'Great Vibes', cursive" onclick="changeFont('Great Vibes')">Great Vibes (Thư pháp)</div>
+                        <div class="font-option" style="font-family: 'Allison', cursive" onclick="changeFont('Allison')">Allison (Chữ ký)</div>
+                        <div class="font-option" style="font-family: 'Charm', cursive" onclick="changeFont('Charm')">Charm (Nét cọ)</div>
+                        <div class="font-option" style="font-family: 'Philosopher', sans-serif" onclick="changeFont('Philosopher')">Philosopher (Uốn lượn)</div>
+
+                        <div class="font-option" style="font-family: 'Bangers', cursive" onclick="changeFont('Bangers')">Bangers (Truyện tranh)</div>
+                        <div class="font-option" style="font-family: 'Black Ops One', cursive" onclick="changeFont('Black Ops One')">Black Ops (Quân đội)</div>
+                        <div class="font-option" style="font-family: 'Bevan', serif" onclick="changeFont('Bevan')">Bevan (Đậm chất)</div>
+                        <div class="font-option" style="font-family: 'Fjalla One', sans-serif" onclick="changeFont('Fjalla One')">Fjalla (Tiêu đề lớn)</div>
+                        <div class="font-option" style="font-family: 'Righteous', cursive" onclick="changeFont('Righteous')">Righteous (Công nghệ)</div>
+
+                        <div class="font-option" style="font-family: 'Grenze Gotisch', cursive" onclick="changeFont('Grenze Gotisch')">Grenze (Ma mị)</div>
+                        <div class="font-option" style="font-family: 'Shadows Into Light', cursive" onclick="changeFont('Shadows Into Light')">Shadows (Bút chì)</div>
+                        <div class="font-option" style="font-family: 'Bungee', cursive" onclick="changeFont('Bungee')">Bungee (Đường phố)</div>
+                        <div class="font-option" style="font-family: 'Chakra Petch', sans-serif" onclick="changeFont('Chakra Petch')">Chakra (Sci-Fi)</div>
+                        <div class="font-option" style="font-family: 'Courier Prime', monospace" onclick="changeFont('Courier Prime')">Courier (Máy đánh chữ)</div>
+                        <div class="font-option" style="font-family: 'Roboto', sans-serif" onclick="changeFont('Roboto')">Roboto</div>
+                    </div>
+                </div>                
+                <div class="toolbar-input-group">
+                    <button class="mini-btn" onclick="adjustFontSize(-1)"><i class="fa fa-minus"></i></button>
+                    <input type="text" id="font-size-input" value="24" onchange="setFontSize(this.value)">
+                    <button class="mini-btn" onclick="adjustFontSize(1)"><i class="fa fa-plus"></i></button>
+                </div>
+
+                <div class="tool-divider"></div>
+                <button class="tool-btn" id="btn-color" onclick="openColorPanel()" style="position:relative">
+                    <div id="curr-color-preview" style="width:20px; height:20px; border-radius:4px; background:black; border:1px solid #ddd"></div>
+                    <span style="position:absolute; bottom:6px; right:6px; font-size:8px; background:white; padding:0 2px; border-radius:2px; font-weight:bold">A</span>
+                </button>
+                
+                <button class="tool-btn" id="btn-bold" onclick="toggleFormat('bold')"><i class="fa fa-bold"></i></button>
+                <button class="tool-btn" id="btn-italic" onclick="toggleFormat('italic')"><i class="fa fa-italic"></i></button>
+                <button class="tool-btn" id="btn-underline" onclick="toggleFormat('underline')"><i class="fa fa-underline"></i></button>
+                
+                <div class="tool-divider"></div>
+                
+                <button class="tool-btn" onclick="toggleAlign()" title="Căn lề">
+                    <i id="align-icon-display" class="fa fa-align-center"></i>
+                </button>                
+                <button class="tool-btn" title="Giãn cách" onclick="togglePopup('spacing-popup')">
+                    <i class="fa fa-text-width"></i>
+                </button>
+                <button class="tool-btn" title="Độ trong suốt" onclick="togglePopup('opacity-popup')"><i class="fa fa-adjust"></i></button>                
+                <button class="tool-btn" id="btn-lock-text" onclick="toggleLock()" title="Khoá/Mở khoá">
+                    <i class="fa fa-unlock"></i>
+                </button>
+                <div class="tool-divider"></div>
+                <button class="tool-btn" title="Xoá" onclick="deleteSelected()"><i class="fa fa-trash" style="color:#ff4d4d"></i></button>
+            </div>
+
+            <div class="popup-panel" id="opacity-popup" style="width: 200px;">
+                <div style="margin-bottom:5px; font-weight:700">Độ trong suốt</div>
+                <div style="display:flex; align-items:center; gap:10px">
+                    <input type="range" min="0" max="100" value="100" id="opacity-slider" oninput="changeOpacity(this.value)">
+                    <span id="opacity-val" style="font-size:12px; font-weight:700; width:30px">100</span>
+                </div>
+            </div>
+
+            <div class="popup-panel" id="border-popup">
+                <div style="margin-bottom:10px; font-weight:700">Kiểu viền</div>
+                <div class="border-styles">
+                    <div class="border-opt" onclick="changeBorderStyle('none')"><i class="fa fa-ban"></i></div>
+                    <div class="border-opt" onclick="changeBorderStyle('solid')"><div style="width:20px; height:2px; background:black"></div></div>
+                    <div class="border-opt" onclick="changeBorderStyle('dashed')"><div class="dashed-line" style="background: repeating-linear-gradient(90deg, black 0, black 5px, transparent 5px, transparent 8px);"></div></div>
+                    <div class="border-opt" onclick="changeBorderStyle('dotted')"><div class="dashed-line" style="background: repeating-linear-gradient(90deg, black 0, black 2px, transparent 2px, transparent 5px);"></div></div>
+                </div>
+                <div style="margin-bottom:5px; font-weight:700; margin-top:15px">Độ dày</div>
+                <input type="range" min="0" max="20" value="0" oninput="changeBorderWidth(this.value)">
+            </div>
+
+            <div class="popup-panel" id="spacing-popup">
+                <div class="spacing-control">
+                    <div class="spacing-label">
+                        <span>Giãn cách chữ</span>
+                        <input type="number" class="spacing-val-box" id="letter-spacing-val" value="0" onchange="updateSpacing('letter', this.value)">
+                    </div>
+                    <input type="range" min="-5" max="50" value="0" step="0.5" id="letter-spacing-slider" oninput="updateSpacing('letter', this.value)">
+                </div>
+                <div class="spacing-control" style="margin-bottom:0">
+                    <div class="spacing-label">
+                        <span>Khoảng cách dòng</span>
+                        <input type="number" class="spacing-val-box" id="line-height-val" value="1.4" step="0.1" onchange="updateSpacing('line', this.value)">
+                    </div>
+                    <input type="range" min="0.1" max="3.0" step="0.1" value="1.4" id="line-height-slider" oninput="updateSpacing('line', this.value)">
+                </div>
+            </div>
+
+        </div>
+
+        <div class="workspace" id="workspace">
+            <div id="artboard-wrapper">
+                <div id="artboard">
+                    <div id="layers-container" style="width:100%; height:100%; position:absolute; top:0; left:0; z-index:1;">
+                        <div class="movable-element" data-type="frame" data-locked="true" style="position:absolute; inset:0; z-index: 10; pointer-events:none;">                            
+                            <img src="assets/khung-1.png" style="width:100%; height:100%; object-fit:contain;" id="main-frame">
+                        </div>
+                    </div>
+                    <div class="vung-lam-mo"></div>
+                </div>            
+            </div>
+
+            <div class="zoom-container">
+                <button class="zoom-btn" onclick="adjustZoom(-10)">
+                    <i class="fa fa-minus"></i>
+                </button>
+
+                <input type="range" class="zoom-slider" min="10" max="300" value="70" 
+                    id="zoom-range" 
+                    oninput="setZoom(this.value)">
+
+                <div class="zoom-val-wrapper" style="display: flex; align-items: center;">
+                    <input type="number" id="zoom-input" value="70" min="10" max="300" 
+                        oninput="setZoom(this.value)" 
+                        style="width: 50px; border: none; background: transparent; text-align: right; font-weight: 700; color: #333; outline: none; padding: 0;">
+                    <span style="margin-left: 2px; font-weight: 700;">%</span>
+                </div>
+
+                <button class="zoom-btn" onclick="adjustZoom(10)">
+                    <i class="fa fa-plus"></i>
+                </button>
+            </div>         
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="custom-modal">
+            <div class="modal-icon" id="modal-icon"></div>
+            <div class="modal-title" id="modal-title"></div>
+            <div class="modal-desc" id="modal-desc"></div>
+            <div class="modal-actions" id="modal-actions"></div>
+        </div>
+    </div>
+    <div id="saving-overlay" class="saving-screen">
+        <div class="saving-box">
+            <div class="saving-icon-wrapper">
+                <i class="fa-solid fa-camera saving-main-icon"></i>
+                <i class="fa-solid fa-bolt saving-flash"></i>
+            </div>
+
+            <h3 class="saving-title">Đang rửa ảnh...</h3>
+            <p class="saving-subtitle">Đợi xíu xiu thôi nhé!</p>
+
+            <i class="fa-solid fa-heart float-decor d1"></i>
+            <i class="fa-solid fa-star float-decor d2"></i>
+            <i class="fa-solid fa-music float-decor d3"></i>
+            <i class="fa-solid fa-face-kiss-wink-heart float-decor d4"></i>
+        </div>
+    </div>
+    <script>
+        /* --- 1. BIẾN TOÀN CỤC (CHỈ KHAI BÁO 1 LẦN) --- */
+        let selectedEl = null;
+        let activePanelId = null;
+        let currentZoom = 70;
+        let zIndexCounter = 2000;
+
+        // THAY ĐỔI Ở ĐÂY: Tạo 2 biến để lưu kích thước thật của khung
+        let baseWidth = 600;  // Mặc định ban đầu
+        let baseHeight = 600; // Mặc định ban đầu        
+        /* --- DÁN VÀO SAU KHAI BÁO BIẾN TOÀN CỤC --- */
+
+        // 1. Khai báo biến lưu lịch sử
+        const historyStack = [];
+        const redoStack = [];
+        const MAX_HISTORY = 50; // Lưu tối đa 50 bước
+        let isUndoing = false; // Cờ để chặn saveState khi đang undo
+
+        // 2. Hàm lưu trạng thái (Gọi hàm này mỗi khi có thay đổi)
+        function saveState() {
+            if (isUndoing) return;
+
+            // Lấy nội dung HTML hiện tại của khung chứa layer
+            const container = document.getElementById('layers-container');
+            const currentState = container.innerHTML;
+
+            // Nếu trạng thái mới giống hệt trạng thái cũ nhất thì không lưu (tránh trùng lặp)
+            if (historyStack.length > 0 && historyStack[historyStack.length - 1] === currentState) {
+                return;
+            }
+
+            historyStack.push(currentState);
+            
+            // Giới hạn bộ nhớ
+            if (historyStack.length > MAX_HISTORY) historyStack.shift();
+
+            // Mỗi khi làm hành động mới, xoá lịch sử Redo
+            redoStack.length = 0;
+            
+            updateUndoButtons();
+        }
+
+        // 3. Hàm thực hiện Undo
+        function undo() {
+            if (historyStack.length === 0) return;
+
+            isUndoing = true; // Bật cờ để không saveState lúc này
+
+            // Lưu trạng thái hiện tại vào Redo Stack trước khi lùi lại
+            const container = document.getElementById('layers-container');
+            redoStack.push(container.innerHTML);
+
+            // Lấy trạng thái cũ ra
+            const prevState = historyStack.pop();
+            container.innerHTML = prevState;
+
+            // QUAN TRỌNG: Hồi sinh lại tính năng kéo thả cho các phần tử vừa được phục hồi
+            rebindAllEvents();
+            
+            // Cập nhật lại selection (bỏ chọn để tránh lỗi)
+            deselect();
+            renderLayerList(); // Cập nhật lại bảng layer
+            
+            isUndoing = false;
+            updateUndoButtons();
+        }
+
+        // 4. Hàm thực hiện Redo
+        function redo() {
+            if (redoStack.length === 0) return;
+
+            isUndoing = true;
+
+            // Lưu trạng thái hiện tại vào History Stack
+            const container = document.getElementById('layers-container');
+            historyStack.push(container.innerHTML);
+
+            // Lấy trạng thái tương lai ra
+            const nextState = redoStack.pop();
+            container.innerHTML = nextState;
+
+            rebindAllEvents();
+            deselect();
+            renderLayerList();
+
+            isUndoing = false;
+            updateUndoButtons();
+        }
+
+        // 5. Hàm cập nhật giao diện nút (Sáng/Tối)
+        function updateUndoButtons() {
+            document.getElementById('btn-undo').disabled = historyStack.length === 0;
+            document.getElementById('btn-redo').disabled = redoStack.length === 0;
+        }
+
+        // 6. Hàm "Hồi sinh" sự kiện (Re-bind Events)
+        // Vì innerHTML chỉ lưu hình ảnh, không lưu code chạy, nên ta phải gán lại code chạy cho nó.
+        function rebindAllEvents() {
+            const elements = document.querySelectorAll('.movable-element');
+            elements.forEach(el => {
+                // Nếu là frame nền thì bỏ qua
+                if (el.dataset.type === 'frame') return;
+
+                // Gán lại kéo thả
+                makeDraggable(el);
+                // Gán lại co giãn
+                attachResizeBehavior(el);
+                // Gán lại xoay (Nếu bạn đã thêm tính năng xoay ở câu hỏi trước)
+                if(typeof attachRotateBehavior === 'function') {
+                    attachRotateBehavior(el);
+                }
+
+                // Gán lại sự kiện sửa văn bản (nếu là text)
+                if (el.dataset.type === 'text') {
+                    el.addEventListener('dblclick', (e) => { 
+                        e.stopPropagation(); 
+                        // Tìm lại hàm triggerEditMode, cần đảm bảo selectedEl được gán đúng
+                        selectElement(el); 
+                        triggerEditMode(); 
+                    });
+                }
+            });
+        }
+
+        // 7. Phím tắt Ctrl+Z, Ctrl+Y
+        window.addEventListener('keydown', (e) => {
+            // Nếu đang sửa chữ (nhập liệu) thì không undo của hệ thống này
+            if (e.target.isContentEditable || e.target.tagName === 'INPUT') return;
+
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    redo(); // Ctrl + Shift + Z
+                } else {
+                    undo(); // Ctrl + Z
+                }
+            }
+            // Hỗ trợ Ctrl + Y cho Redo
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                redo();
+            }
+        });
+
+        /* --- 2. KHỞI TẠO --- */
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFrameFromURL();
+            initColors();
+            
+            // Auto Zoom Responsive
+            const zoomVal = window.innerWidth < 768 ? 40 : 70;
+            setZoom(zoomVal);
+
+            renderLayerList();
+            // Hiện popup chào mừng (nếu có)
+            setTimeout(() => {
+                const welcome = document.getElementById('welcome-modal');
+                if(welcome) welcome.classList.add('show');
+            }, 500);
+        });
+
+        // HÀM TẢI KHUNG VÀ THIẾT LẬP KÍCH THƯỚC CHUẨN
+        function loadFrameFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const frameName = params.get('frame'); 
+            
+            const artboard = document.getElementById('artboard');
+            const mainFrameImg = document.getElementById('main-frame');
+            const frameContainer = document.querySelector('.movable-element[data-type="frame"]');
+
+            if (frameName && mainFrameImg) {
+                // 1. Tạo ảnh ảo để đo kích thước thật
+                const tempImg = new Image();
+                tempImg.src = 'assets/' + frameName;
+
+                tempImg.onload = function() {
+                    // 2. Lấy kích thước GỐC của ảnh khung (Ví dụ: 1080x1920)
+                    baseWidth = this.naturalWidth;
+                    baseHeight = this.naturalHeight;
+
+                    // 3. Ép vùng làm việc (#artboard) có kích thước Y HỆT khung
+                    artboard.style.width = baseWidth + 'px';
+                    artboard.style.height = baseHeight + 'px';
+
+                    // 4. Gán ảnh vào khung hiển thị
+                    mainFrameImg.src = this.src;
+
+                    // 5. Đảm bảo khung nằm đè lên trên cùng (Overlay)
+                    // (CSS ở Bước 1 đã lo việc z-index và pointer-events)
+
+                    // 6. Tự động Zoom để vừa màn hình người dùng
+                    // (Tính toán tỉ lệ zoom sao cho toàn bộ artboard hiển thị đủ)
+                    const workspace = document.getElementById('workspace');
+                    // Trừ hao khoảng cách lề (padding) để đẹp
+                    const padding = 40; 
+                    const availW = workspace.clientWidth - padding; 
+                    const availH = workspace.clientHeight - padding;
+
+                    const scaleX = availW / baseWidth;
+                    const scaleY = availH / baseHeight;
+                    
+                    // Chọn tỉ lệ nhỏ nhất để không bị khuất
+                    let bestScale = Math.min(scaleX, scaleY, 1) * 100;
+                    
+                    // Giới hạn zoom tối thiểu là 10%
+                    if(bestScale < 10) bestScale = 10;
+
+                    // Gọi hàm zoom
+                    setZoom(Math.floor(bestScale));
+                    setTimeout(() => { saveState(); }, 500);
+                }
+            } else {
+                // Trường hợp không có khung (Chế độ tự do)
+                // Xoá khung mẫu đi
+                if(frameContainer) frameContainer.remove();
+                
+                // Mặc định kích thước vuông 800x800 cho chế độ tự do
+                baseWidth = 800;
+                baseHeight = 800;
+                artboard.style.width = '800px';
+                artboard.style.height = '800px';
+                
+                setZoom(70); // Zoom mặc định
+                
+                // Thêm dòng chữ gợi ý
+                setTimeout(() => {
+                    addText(); 
+                    const allTexts = document.querySelectorAll('.text-content');
+                    if(allTexts.length > 0) {
+                        const lastText = allTexts[allTexts.length - 1];
+                        lastText.innerText = "Bắt đầu sáng tạo nào!";
+                    }
+                }, 100);
+            }
+        }        
+        function initColors() {
+            const solidContainer = document.getElementById('solid-colors');
+            const colors = ["#000000", "#545454", "#737373", "#A6A6A6", "#D9D9D9", "#FFFFFF", "#FF3131", "#FF5757", "#FF66C4", "#CB6CE6", "#8C52FF", "#5E17EB", "#03989E", "#00C2CB", "#5CE1E6", "#38B6FF", "#5271FF", "#004AAD", "#008037", "#7ED957", "#C9E265", "#FFDE59", "#FFBD59", "#FF914D"];
+            colors.forEach(c => {
+                const div = document.createElement('div'); div.className = 'color-dot'; div.style.background = c;
+                div.onclick = () => applyColor(c); solidContainer.appendChild(div);
+            });
+            
+            const gradContainer = document.getElementById('gradient-colors');
+            const gradients = ["linear-gradient(135deg, #FF9A9E 0%, #FECFEF 99%)", "linear-gradient(120deg, #a18cd1 0%, #fbc2eb 100%)", "linear-gradient(to right, #4facfe 0%, #00f2fe 100%)", "linear-gradient(to top, #30cfd0 0%, #330867 100%)", "linear-gradient(to right, #f83600 0%, #f9d423 100%)"];
+            gradients.forEach(g => {
+                const div = document.createElement('div'); div.className = 'color-dot'; div.style.background = g;
+                div.onclick = () => applyColor(g); gradContainer.appendChild(div);
+            });
+        }
+        function addText() {
+            saveState(); // Lưu lịch sử trước khi thêm
+
+            // 1. Tạo khung chứa văn bản
+            const el = document.createElement('div');
+            el.className = 'movable-element';
+            el.dataset.type = 'text';
+            
+            // Đặt vị trí mặc định
+            el.style.left = '100px'; 
+            el.style.top = '200px'; 
+            el.style.width = '200px'; // Đặt chiều rộng cố định để có thể xuống dòng
+            el.style.height = 'auto'; // Chiều cao tự động
+            el.style.zIndex = zIndexCounter++;
+            el.style.transform = 'rotate(0deg)'; 
+
+            // 2. Tạo nội dung chữ
+            const content = document.createElement('div');
+            content.className = 'text-element text-content';
+            content.innerText = 'Chạm để sửa';
+            content.contentEditable = "false"; 
+
+            // 3. Tạo 2 nút kéo dãn (Trái/Phải) để chỉnh chiều rộng
+            const handleE = document.createElement('div');
+            handleE.className = 'resize-handle handle-e'; // Nút phải
+
+            const handleW = document.createElement('div');
+            handleW.className = 'resize-handle handle-w'; // Nút trái
+
+            // 4. [QUAN TRỌNG] Tạo nút Xoay (Lỗi cũ nằm ở đây do thiếu đoạn này)
+            const rotateHandle = document.createElement('div');
+            rotateHandle.className = 'rotate-handle';
+
+            // 5. Gép tất cả vào khung
+            el.append(content, handleE, handleW, rotateHandle);
+          
+            // 6. Sự kiện click đúp để sửa chữ
+            el.addEventListener('dblclick', (e) => { 
+                e.stopPropagation(); 
+                selectElement(el); // Chọn trước
+                triggerEditMode(); // Rồi mới sửa
+            });
+
+            // 7. Đưa lên màn hình
+            document.getElementById('layers-container').appendChild(el);
+            
+            // 8. Kích hoạt các tính năng điều khiển
+            makeDraggable(el);       // Kéo thả
+            attachResizeBehavior(el);// Co giãn (Kéo 2 cạnh bên)
+            attachRotateBehavior(el);// Xoay
+            
+            selectElement(el);       // Tự động chọn văn bản mới tạo
+            addHighlightEffect(el);
+            renderLayerList();       // Cập nhật bảng layer bên phải
+        }        
+        function addImageToBoard(src) {
+            saveState();
+            const el = document.createElement('div');
+            el.className = 'movable-element';
+            el.dataset.type = 'image';
+            // Vị trí mặc định
+            el.style.left = '200px'; el.style.top = '200px'; el.style.width = '150px'; el.style.height = 'auto';
+            el.style.zIndex = zIndexCounter++;
+            el.style.transform = 'rotate(0deg)'; // Thêm dòng này để chuẩn bị xoay
+
+            const img = document.createElement('img');
+            img.src = src; img.style.width='100%'; img.style.display='block'; img.style.pointerEvents='none';
+
+            // Nút kéo giãn (giữ nguyên)
+            const handle = document.createElement('div'); handle.className = 'resize-handle tr';
+            /* --- SỬA KÍCH THƯỚC NÚT KÉO ẢNH TO HƠN (24px) --- */
+            // Lưu ý: top và right phải là số âm bằng 1/2 kích thước (24/2 = 12) để nút nằm chính giữa góc
+            handle.style.cssText = "position:absolute; width:24px; height:24px; background:white; border:2px solid #6a11cb; border-radius:50%; top:-12px; right:-12px; cursor: ne-resize; z-index:1001; box-shadow: 0 2px 4px rgba(0,0,0,0.2);";
+            // --- MỚI: THÊM NÚT XOAY CHO ẢNH ---
+            const rotateHandle = document.createElement('div');
+            rotateHandle.className = 'rotate-handle'; // Dùng chung class với văn bản
+            // ----------------------------------
+
+            el.append(img, handle, rotateHandle); // Nhớ append rotateHandle vào
+            document.getElementById('layers-container').appendChild(el);
+            
+            makeDraggable(el);
+            attachResizeBehavior(el);
+            attachRotateBehavior(el); // Kích hoạt tính năng xoay
+            
+            selectElement(el);
+            addHighlightEffect(el);
+            renderLayerList();
+        }
+        // HÀM KÉO THẢ (QUAN TRỌNG NHẤT)
+        function makeDraggable(el) {
+            let startX = 0, startY = 0;
+            let initialLeft = 0, initialTop = 0;
+
+            // --- MOBILE TOUCH ---
+            el.addEventListener('touchstart', function(e) {
+                if (e.target.classList.contains('resize-handle') || e.target.isContentEditable) return;
+                if (el.dataset.locked === "true") { selectElement(el); return; }
+
+                e.stopPropagation();
+                e.preventDefault(); 
+                selectElement(el);
+
+                const touch = e.touches[0];
+                startX = touch.clientX; startY = touch.clientY;
+                initialLeft = parseFloat(el.style.left || 0);
+                initialTop = parseFloat(el.style.top || 0);
+
+                function onTouchMove(ev) {
+                    ev.preventDefault();
+                    const t = ev.touches[0];
+                    const scale = currentZoom / 100;
+                    const dx = (t.clientX - startX) / scale;
+                    const dy = (t.clientY - startY) / scale;
+                    el.style.left = (initialLeft + dx) + 'px';
+                    el.style.top = (initialTop + dy) + 'px';
+                }
+
+                function onTouchEnd() {
+                    window.removeEventListener('touchmove', onTouchMove);
+                    window.removeEventListener('touchend', onTouchEnd);
+                    saveState();
+                }
+                window.addEventListener('touchmove', onTouchMove, { passive: false });
+                window.addEventListener('touchend', onTouchEnd);
+            }, { passive: false });
+
+            // --- PC MOUSE ---
+            el.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('resize-handle') || e.target.isContentEditable) return;
+                if (el.dataset.locked === "true") { selectElement(el); return; }
+
+                e.stopPropagation(); e.preventDefault();
+                selectElement(el);
+                
+                startX = e.clientX; startY = e.clientY;
+                initialLeft = parseFloat(el.style.left || 0);
+                initialTop = parseFloat(el.style.top || 0);
+
+                function onMouseMove(ev) {
+                    ev.preventDefault();
+                    const scale = currentZoom / 100;
+                    const dx = (ev.clientX - startX) / scale;
+                    const dy = (ev.clientY - startY) / scale;
+                    el.style.left = (initialLeft + dx) + 'px';
+                    el.style.top = (initialTop + dy) + 'px';
+                }
+
+                function onMouseUp() {
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                    saveState();
+                }
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
+/* --- HÀM XỬ LÝ KÉO KHUNG VĂN BẢN MỚI (BƯỚC 3) --- */
+
+        function attachResizeBehavior(el) {
+            // Chỉ áp dụng cho Text (Ảnh dùng logic khác hoặc giữ nguyên logic cũ)
+            if (el.dataset.type !== 'text') {
+                // Nếu là ảnh, giữ nguyên logic kéo góc cũ (Bạn có thể giữ lại code cũ cho ảnh ở đây)
+                // Hoặc đơn giản là return nếu bạn chưa cần sửa ảnh ngay.
+                return attachResizeBehaviorImage(el); 
+            }
+
+            // Lấy 2 nút kéo ngang
+            const handles = el.querySelectorAll('.handle-e, .handle-w');
+            
+            handles.forEach(handle => {
+                handle.addEventListener('mousedown', initResizeText);
+                handle.addEventListener('touchstart', initResizeText);
+            });
+
+            function initResizeText(e) {
+                if (el.dataset.locked === 'true') return;
+                e.stopPropagation(); e.preventDefault();
+
+                const isTouch = e.type === 'touchstart';
+                const startX = isTouch ? e.touches[0].clientX : e.clientX;
+                
+                // Lấy chiều rộng hiện tại của khung
+                const startWidth = parseFloat(getComputedStyle(el).width);
+                const startLeft = parseFloat(getComputedStyle(el).left);
+                const scale = currentZoom / 100;
+                
+                // Xác định đang kéo bên nào
+                const isRightHandle = e.target.classList.contains('handle-e');
+
+                function doResize(ev) {
+                    ev.preventDefault();
+                    const curX = isTouch ? ev.touches[0].clientX : ev.clientX;
+                    const dx = (curX - startX) / scale; // Tính khoảng cách kéo chuột
+
+                    if (isRightHandle) {
+                        // KÉO CẠNH PHẢI: Chỉ thay đổi width
+                        let newWidth = startWidth + dx;
+                        if (newWidth >= 50) { // Giới hạn nhỏ nhất 50px
+                            el.style.width = newWidth + 'px';
+                        }
+                    } else {
+                        // KÉO CẠNH TRÁI: Thay đổi width VÀ left (để cạnh phải đứng yên)
+                        let newWidth = startWidth - dx;
+                        if (newWidth >= 50) {
+                            el.style.width = newWidth + 'px';
+                            el.style.left = (startLeft + dx) + 'px';
+                        }
+                    }
+                    // Chiều cao (Height) sẽ tự động dãn theo nội dung nhờ CSS height: auto
+                }
+
+                function stopResize() {
+                    window.removeEventListener(isTouch?'touchmove':'mousemove', doResize);
+                    window.removeEventListener(isTouch?'touchend':'mouseup', stopResize);
+                    saveState();
+                }
+
+                window.addEventListener(isTouch?'touchmove':'mousemove', doResize, {passive: false});
+                window.addEventListener(isTouch?'touchend':'mouseup', stopResize);
+            }
+        }
+
+            // --- HÀM PHỤ: GIỮ LẠI LOGIC CŨ CHO ẢNH (NẾU CẦN) ---
+            /* --- CẬP NHẬT HÀM RESIZE ẢNH (GỐC DƯỚI ĐỨNG YÊN) --- */
+            function attachResizeBehaviorImage(el) {
+                const handle = el.querySelector('.resize-handle'); // Nút kéo góc
+                if (!handle) return;
+                
+                // Hàm xử lý chung cho cả Mouse và Touch
+                const startResize = (e) => {
+                    if (el.dataset.locked === 'true') return;
+                    e.stopPropagation();
+                    e.preventDefault(); // Ngăn cuộn trang trên điện thoại
+
+                    // Lấy toạ độ con trỏ (hỗ trợ cả mobile)
+                    const isTouch = e.type === 'touchstart';
+                    const startX = isTouch ? e.touches[0].clientX : e.clientX;
+                    
+                    // 1. Lấy các thông số ban đầu của ảnh
+                    const startWidth = parseFloat(getComputedStyle(el).width);
+                    const startHeight = parseFloat(getComputedStyle(el).height);
+                    const startTop = parseFloat(getComputedStyle(el).top);
+                    
+                    // 2. Tính tỉ lệ khung hình (để giữ ảnh không bị méo)
+                    const ratio = startWidth / startHeight;
+                    
+                    // Lấy hệ số Zoom của màn hình
+                    const scale = currentZoom / 100;
+
+                    function onMove(ev) {
+                        ev.preventDefault();
+                        const clientX = isTouch ? ev.touches[0].clientX : ev.clientX;
+                        
+                        // Tính khoảng cách chuột đã di chuyển
+                        const dx = (clientX - startX) / scale;
+                        
+                        // A. Tính Chiều Rộng Mới
+                        let newWidth = startWidth + dx;
+                        if (newWidth < 20) newWidth = 20; // Giới hạn nhỏ nhất
+                        
+                        // B. Tính Chiều Cao Mới (theo tỉ lệ)
+                        let newHeight = newWidth / ratio;
+
+                        // C. Cập nhật kích thước
+                        el.style.width = newWidth + 'px';
+                        el.style.height = newHeight + 'px';
+
+                        // D. [QUAN TRỌNG NHẤT] Cập nhật vị trí TOP
+                        // Để góc dưới đứng yên, khi ảnh cao lên, ta phải đẩy ảnh lên trên.
+                        // Công thức: Top Mới = Top Cũ + (Chênh lệch chiều cao)
+                        el.style.top = (startTop + startHeight - newHeight) + 'px';
+                    }
+
+                    function onUp() {
+                        window.removeEventListener(isTouch?'touchmove':'mousemove', onMove);
+                        window.removeEventListener(isTouch?'touchend':'mouseup', onUp);
+                        saveState(); // Lưu lịch sử Undo
+                    }
+
+                    // Gán sự kiện di chuyển và nhả chuột
+                    window.addEventListener(isTouch?'touchmove':'mousemove', onMove, {passive: false});
+                    window.addEventListener(isTouch?'touchend':'mouseup', onUp);
+                };
+
+                // Gán sự kiện bắt đầu ấn vào nút kéo
+                // Dùng addEventListener để code sạch hơn và hỗ trợ tốt mobile
+                handle.removeEventListener('mousedown', startResize); // Xóa cũ nếu có để tránh trùng
+                handle.addEventListener('mousedown', startResize);
+                
+                handle.removeEventListener('touchstart', startResize);
+                handle.addEventListener('touchstart', startResize, {passive: false});
+            }            
+        /* --- 4. GIAO DIỆN & CÔNG CỤ --- */
+        function selectElement(el) {
+            if (selectedEl) selectedEl.classList.remove('selected');
+            selectedEl = el;
+            selectedEl.classList.add('selected');
+
+            // Reset UI
+            document.querySelectorAll('.smart-toolbar').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.popup-panel').forEach(p => p.classList.remove('active'));
+
+            if (el.dataset.type === 'text') {
+                document.getElementById('text-toolbar').classList.add('active');
+                updateTextToolbarValues();
+            } else {
+                document.getElementById('img-toolbar').classList.add('active');
+                document.getElementById('opacity-slider').value = (el.style.opacity || 1) * 100;
+            }
+            updateLockBtnState();
+        }
+
+        function deselect() {
+            if (selectedEl) selectedEl.classList.remove('selected');
+            selectedEl = null;
+            document.querySelectorAll('.smart-toolbar').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.popup-panel').forEach(p => p.classList.remove('active'));
+        }
+
+        function triggerEditMode() {
+            if (!selectedEl || selectedEl.dataset.type !== 'text') return;
+            const content = selectedEl.querySelector('.text-content');
+            content.contentEditable = "true";
+            content.focus();
+            selectedEl.classList.add('editing'); 
+
+            const range = document.createRange(); range.selectNodeContents(content);
+            const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+
+            const onBlur = () => {
+                content.contentEditable = "false";
+                selectedEl.classList.remove('editing');
+                content.removeEventListener('blur', onBlur);
+                window.getSelection().removeAllRanges();
+                saveState();
+            };
+            content.addEventListener('blur', onBlur);
+        }
+
+        /* --- 5. CÁC HÀM HỖ TRỢ KHÁC --- */
+        function openColorPanel() {
+            // Gọi hàm togglePanel có sẵn để mở bảng màu (ID là 'color')
+            togglePanel('color');
+        }
+
+        // 2. Hàm cập nhật giãn cách (Sửa lỗi giãn dòng/chữ không hoạt động)
+        function updateSpacing(type, val) {
+            if (!selectedEl || selectedEl.dataset.type !== 'text') return;
+            
+            // Tìm thẻ chứa văn bản bên trong khung
+            const content = selectedEl.querySelector('.text-content');
+            
+            // Cập nhật giá trị hiển thị bên cạnh thanh trượt
+            if (type === 'letter') {
+                content.style.letterSpacing = val + 'px';
+                document.getElementById('letter-spacing-val').value = val;
+            } else if (type === 'line') {
+                content.style.lineHeight = val;
+                document.getElementById('line-height-val').value = val;
+            }
+        }
+
+        function attachRotateBehavior(el) {
+            const rotHandle = el.querySelector('.rotate-handle');
+            if (!rotHandle) return;
+
+            let startAngle = 0;
+            let currentRotation = 0; // Góc xoay hiện tại của khung
+
+            function initRotate(e) {
+                if (el.dataset.locked === 'true') return;
+                e.stopPropagation(); 
+                e.preventDefault();
+
+                // Lấy tâm của đối tượng để làm trục xoay
+                const rect = el.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                // Hỗ trợ cả chuột và cảm ứng (mobile)
+                const isTouch = e.type === 'touchstart';
+                
+                function doRotate(ev) {
+                    ev.preventDefault();
+                    const clientX = isTouch ? ev.touches[0].clientX : ev.clientX;
+                    const clientY = isTouch ? ev.touches[0].clientY : ev.clientY;
+
+                    // Tính góc giữa chuột và tâm đối tượng (Math.atan2)
+                    // Cộng 90 độ vì mặc định 0 độ là hướng 3 giờ, ta muốn hướng 12 giờ
+                    let rad = Math.atan2(clientY - centerY, clientX - centerX);
+                    let deg = rad * (180 / Math.PI) + 90; 
+
+                    // Logic giữ Shift để xoay chẵn góc (0, 15, 30...)
+                    if (ev.shiftKey) {
+                        deg = Math.round(deg / 15) * 15;
+                    }
+
+                    // Áp dụng góc xoay vào CSS
+                    el.style.transform = `rotate(${deg}deg)`;
+                    el.dataset.rotation = deg; // Lưu lại góc để dùng sau này nếu cần
+                }
+
+                function stopRotate() {
+                    window.removeEventListener(isTouch ? 'touchmove' : 'mousemove', doRotate);
+                    window.removeEventListener(isTouch ? 'touchend' : 'mouseup', stopRotate);
+                    saveState();
+                }
+
+                window.addEventListener(isTouch ? 'touchmove' : 'mousemove', doRotate, { passive: false });
+                window.addEventListener(isTouch ? 'touchend' : 'mouseup', stopRotate);
+            }
+
+            rotHandle.addEventListener('mousedown', initRotate);
+            rotHandle.addEventListener('touchstart', initRotate);
+        }
+        function renderLayerList() {
+            const container = document.getElementById('layers-list-container');
+            const layerContainer = document.getElementById('layers-container');
+            const layers = Array.from(layerContainer.children);
+
+            // Update Z-index
+            layers.forEach((el, index) => { el.style.zIndex = index + 100; });
+
+            const layersReversed = [...layers].reverse(); 
+            container.innerHTML = '';
+            
+            if (layersReversed.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#999;font-size:12px;padding:20px;">Trống</div>';
+                return;
+            }
+
+            layersReversed.forEach((el, index) => {
+                const item = document.createElement('div');
+                item.className = `layer-item ${el === selectedEl ? 'active' : ''}`;
+                item.onclick = (e) => { if(e.target.closest('.layer-move-btn')) return; selectElement(el); };
+
+                let contentHtml = 'Lớp đối tượng';
+                if (el.dataset.type === 'text') {
+                    let txt = el.querySelector('.text-content').innerText;
+                    if(txt.length > 20) txt = txt.substring(0, 20) + "...";
+                    contentHtml = `<div class="layer-info is-text"><i class="fa fa-font" style="margin-right:8px;"></i>${txt}</div>`;
+                } else if (el.dataset.type === 'image') {
+                    const src = el.querySelector('img').src;
+                    contentHtml = `<div class="layer-info"><img src="${src}" class="layer-thumb-large"></div>`;
+                } else if (el.dataset.type === 'frame') {
+                    contentHtml = `<div class="layer-info is-text" style="color:var(--primary); font-weight:700;"><i class="fa fa-crop-alt"></i>Template</div>`;
+                }
+
+                const disableUp = index === 0 ? 'disabled style="opacity:0.3"' : '';
+                const disableDown = index === layersReversed.length - 1 ? 'disabled style="opacity:0.3"' : '';
+
+                const controls = `
+                    <div class="layer-controls">
+                        <button class="layer-move-btn" ${disableUp} onclick="moveLayerStep(event, ${index}, 'up')"><i class="fa fa-chevron-up"></i></button>
+                        <button class="layer-move-btn" ${disableDown} onclick="moveLayerStep(event, ${index}, 'down')"><i class="fa fa-chevron-down"></i></button>
+                    </div>`;
+
+                item.innerHTML = contentHtml + controls;
+                container.appendChild(item);
+            });
+        }
+
+        // Thêm tham số 'e' (event) vào đầu
+        function moveLayerStep(e, visualIndex, direction) {
+            // 1. DÒNG QUAN TRỌNG NHẤT: Chặn không cho trình duyệt biết bạn vừa bấm chuột
+            e.stopPropagation(); 
+
+            const layerContainer = document.getElementById('layers-container');
+            const layers = Array.from(layerContainer.children);
+            const domIndex = layers.length - 1 - visualIndex;
+            const el = layers[domIndex];
+
+            if (direction === 'up' && el.nextElementSibling) {
+                layerContainer.insertBefore(el.nextElementSibling, el);
+            } else if (direction === 'down' && el.previousElementSibling) {
+                layerContainer.insertBefore(el, el.previousElementSibling);
+            }
+            
+            // Vẽ lại danh sách
+            renderLayerList();
+            
+            // (Tuỳ chọn) Giữ lại lựa chọn cho đối tượng đang di chuyển để dễ nhìn
+            // selectElement(el); 
+        }
+        function togglePanel(id) {
+            const container = document.getElementById('main-panels');
+            const main = document.getElementById('editor-main');
+            const panel = document.getElementById('panel-' + id);
+            
+            // Nếu đang mở đúng bảng đó thì đóng lại (Toggle)
+            if (activePanelId === id) {
+                container.classList.remove('open');
+                main.classList.remove('shifted');
+                document.querySelectorAll('.side-panel').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.side-item').forEach(i => i.classList.remove('active'));
+                activePanelId = null;
+            } else {
+                // Đóng các bảng khác trước
+                document.querySelectorAll('.side-panel').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.side-item').forEach(i => i.classList.remove('active'));
+
+                // Mở bảng mới
+                panel.classList.add('active');
+                container.classList.add('open');
+                
+                // Đẩy màn hình sang phải (chỉ trên PC)
+                if(window.innerWidth > 768) main.classList.add('shifted');
+                
+                activePanelId = id;
+
+                // Nếu mở bảng Layer thì render lại danh sách cho mới nhất
+                if (id === 'layers') {
+                    renderLayerList();
+                }
+            }
+        }        
+        function handleUpload(event) {
+            const files = event.target.files;
+            const history = document.getElementById('upload-history');
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const thumb = document.createElement('img'); thumb.className = 'thumb'; thumb.src = e.target.result;
+                    thumb.onclick = () => addImageToBoard(e.target.result);
+                    history.insertBefore(thumb, history.firstChild);
+                    addImageToBoard(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 2. Hàm xử lý khi người dùng nhập số vào ô input
+        function handleZoomInput(val) {
+            // Chỉ cần gọi hàm setZoom, nó sẽ tự lo việc giới hạn min/max và cập nhật thanh trượt
+            setZoom(val);
+        }
+
+        /* --- LOGIC ZOOM ĐỒNG BỘ HOÀN HẢO --- */
+
+        function setZoom(val) {
+            // NẾU LÀ ĐIỆN THOẠI THÌ KHÔNG CHẠY HÀM NÀY
+            // Để code zoom 2 ngón ở trên tự lo
+            if (window.innerWidth < 768) return; 
+
+            /* --- GIỮ NGUYÊN CODE CŨ CHO MÁY TÍNH --- */
+            let num = parseInt(val);
+            if (isNaN(num)) return; 
+            if (num < 10) num = 10;
+            if (num > 300) num = 300;
+            currentZoom = num;
+
+            const scale = num / 100;
+            const artboard = document.getElementById('artboard');
+            const wrapper = document.getElementById('artboard-wrapper');
+
+            if (artboard) {
+                artboard.style.transform = `scale(${scale})`;
+                // Reset lại transform-origin cho PC
+                artboard.style.transformOrigin = 'top left'; 
+                
+                if (wrapper) {
+                    // Sửa số 600 thành biến baseWidth và baseHeight
+                    wrapper.style.width = (baseWidth * scale) + 'px';
+                    wrapper.style.height = (baseHeight * scale) + 'px';
+                    wrapper.style.transform = 'none';
+                    }
+            }
+            
+            // Cập nhật slider... (Giữ nguyên đoạn cập nhật UI slider của bạn)
+            const slider = document.getElementById('zoom-range');
+            if (slider) {
+                slider.value = num;
+                const percent = ((num - 10) / (300 - 10)) * 100;
+                slider.style.background = `linear-gradient(to right, #6a11cb ${percent}%, #e0e0e0 ${percent}%)`;
+            }
+            const inputNum = document.getElementById('zoom-input');
+            if (inputNum && inputNum.value != num) inputNum.value = num;
+        }
+        // Hàm xử lý cho nút Cộng (+) và Trừ (-)
+        function adjustZoom(amount) {
+            // Lấy giá trị zoom hiện tại cộng thêm lượng thay đổi (ví dụ +10 hoặc -10)
+            let newZoom = currentZoom + amount;
+            
+            // Gọi lại hàm setZoom để nó tự lo mọi việc còn lại (giới hạn, cập nhật slider, v.v...)
+            setZoom(newZoom);
+        }
+
+        // Hàm xử lý riêng cho ô Input khi người dùng gõ xong (Blur) 
+        // để tránh trường hợp để trống ô input
+        document.getElementById('zoom-input').addEventListener('blur', function() {
+            let val = parseInt(this.value);
+            if (isNaN(val)) {
+                setZoom(70); // Nếu ô trống hoặc lỗi thì về mặc định 70%
+            } else {
+                setZoom(val); // Nếu ok thì set lại để đảm bảo đúng giới hạn min/max
+            }
+        });
+
+        function setFontSize(val) { if (selectedEl) selectedEl.querySelector('.text-content').style.fontSize = val + 'px'; }
+        function adjustFontSize(d) { const inp = document.getElementById('font-size-input'); let v = parseInt(inp.value)+d; if(v<6)v=6; inp.value=v; setFontSize(v); }
+        function toggleAlign() {
+            if (!selectedEl) return;
+            const s = selectedEl.querySelector('.text-content');
+            const modes = ['left','center','right','justify'];
+            let idx = modes.indexOf(s.style.textAlign || 'left');
+            s.style.textAlign = modes[(idx+1)%4];
+            updateTextToolbarValues();
+        }
+        function applyColor(c) {
+            if (!selectedEl) return;
+            const s = selectedEl.querySelector('.text-content').style;
+            if(c.includes('gradient')) { s.background=c; s.webkitBackgroundClip='text'; s.webkitTextFillColor='transparent'; s.color='transparent'; }
+            else { s.background='none'; s.webkitBackgroundClip='unset'; s.webkitTextFillColor='unset'; s.color=c; }
+            document.getElementById('curr-color-preview').style.background=c;
+        }
+        function changeOpacity(v) { if(selectedEl) { selectedEl.style.opacity = v/100; document.getElementById('opacity-val').innerText=v; } }
+        function deleteSelected() { if(selectedEl) { saveState(); selectedEl.remove(); deselect(); renderLayerList(); updateUndoButtons()} }
+        function toggleLock() { if(selectedEl) { selectedEl.dataset.locked = (selectedEl.dataset.locked === 'true' ? 'false' : 'true'); updateLockBtnState(); } }
+        function updateLockBtnState() {
+            if(!selectedEl) return;
+            const isLocked = selectedEl.dataset.locked === "true";
+            const btns = [document.getElementById('btn-lock'), document.getElementById('btn-lock-text')];
+            btns.forEach(b => { if(b) { b.querySelector('i').className = isLocked ? 'fa fa-lock' : 'fa fa-unlock'; b.style.color = isLocked ? '#ff4d4d' : '#333'; }});
+        }
+        
+        // Đóng bảng khi click ra ngoài
+        // Đóng bảng khi click ra ngoài
+        // Sửa: Lắng nghe trên toàn bộ cửa sổ (window) để bắt sự kiện chính xác hơn
+        // XỬ LÝ CLICK TOÀN CỤC
+        window.addEventListener('click', (e) => {
+            // 1. Nếu đang bấm vào một Đối tượng (ảnh/chữ) -> KHÔNG LÀM GÌ
+            if(e.target.closest('.movable-element')) return;
+
+            // 2. Nếu đang bấm vào Sidebar, Panel hoặc nút công cụ -> KHÔNG LÀM GÌ
+            if(e.target.closest('.sidebar') || 
+            e.target.closest('.side-panel') || 
+            e.target.closest('.mobile-bottom-bar') ||
+            e.target.closest('.smart-toolbar') || 
+            e.target.closest('.popup-panel')) {
+                return; 
+            }
+
+            // 3. CÒN LẠI: Tức là bấm vào vùng trống Workspace
+            
+            // -> Bỏ chọn đối tượng đang sửa
+            deselect();
+
+            // -> Đóng Sidebar (Upload, Text, Layers) nếu đang mở
+            if (activePanelId) {
+                const container = document.getElementById('main-panels');
+                const main = document.getElementById('editor-main');
+                
+                container.classList.remove('open');
+                main.classList.remove('shifted');
+                document.querySelectorAll('.side-panel').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.side-item').forEach(i => i.classList.remove('active'));
+                
+                activePanelId = null;
+            }
+        });        
+        // Hàm chụp ảnh
+        /* --- HÀM CHỤP ẢNH & CHUYỂN TRANG (CÓ HIỆU ỨNG CHỜ) --- */
+        /* --- HÀM CHỤP ẢNH SIÊU NÉT (FULL HD / 4K) --- */
+        function chupAnhVaChuyenTrang() {
+            // 1. Đóng modal và ẩn các thành phần thừa
+            closeModal();
+            deselect();
+            const vungLamMo = document.querySelector('.vung-lam-mo');
+            if (vungLamMo) vungLamMo.style.display = 'none';
+
+            // 2. Hiện màn hình chờ
+            const savingOverlay = document.getElementById('saving-overlay');
+            savingOverlay.style.display = 'flex';
+
+            // 3. [MẸO QUAN TRỌNG] Lưu lại độ zoom hiện tại của người dùng
+            const originalZoom = currentZoom;
+            const originalTransform = document.getElementById('artboard').style.transform;
+
+            // 4. Ép khung hình về kích thước chuẩn 100% (Scale 1) để chụp cho nét
+            // (Người dùng sẽ không thấy bước nhảy này vì màn hình chờ đang che)
+            document.getElementById('artboard').style.transform = 'scale(1)';
+            
+            // Đợi 100ms để trình duyệt kịp cập nhật giao diện về 100%
+            setTimeout(() => {
+                html2canvas(document.getElementById('artboard'), { 
+                    scale: 4, // [QUAN TRỌNG] Tăng lên 4 để ảnh siêu nét (gấp 4 lần kích thước gốc)
+                    useCORS: true, 
+                    backgroundColor: null, // Giữ nền trong suốt
+                    logging: false, // Tắt log cho nhẹ
+                    allowTaint: true
+                }).then(canvas => {
+                    try {
+                        // 5. Lấy dữ liệu ảnh
+                        const imgData = canvas.toDataURL("image/png");
+
+                        // 6. Thử lưu vào bộ nhớ đệm để chuyển trang
+                        localStorage.setItem('finalDesign', imgData);
+                        
+                        // Nếu lưu thành công, phục hồi zoom cũ và chuyển trang
+                        document.getElementById('artboard').style.transform = originalTransform;
+                        
+                        setTimeout(() => {
+                            window.location.href = 'ket-qua.html';
+                        }, 1000);
+
+                    } catch(e) { 
+                        // [XỬ LÝ LỖI DUNG LƯỢNG]
+                        // Nếu ảnh quá nét (file quá nặng) -> LocalStorage bị đầy -> Không chuyển trang được
+                        // => Tải xuống NGAY LẬP TỨC tại trang này luôn
+                        
+                        console.log("Ảnh quá nét, bộ nhớ trình duyệt đầy. Đang tải trực tiếp...");
+                        
+                        const link = document.createElement('a');
+                        link.download = 'thiet-ke-full-hd.png';
+                        link.href = canvas.toDataURL("image/png");
+                        link.click();
+
+                        // Ẩn màn hình chờ và thông báo cho khách
+                        setTimeout(() => {
+                            savingOverlay.style.display = 'none';
+                            if (vungLamMo) vungLamMo.style.display = 'block';
+                            document.getElementById('artboard').style.transform = originalTransform; 
+
+                            // Thay vì alert lỗi, hãy báo thành công
+                            alert("Ảnh Full HD đã được tải xuống máy của bạn!"); 
+                            // Xóa dòng window.location.href = 'ket-qua.html'; đi
+                        }, 1000);
+                    }
+                });
+            }, 200); // Thời gian chờ render lại zoom 100%
+        }        
+        function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+        /* --- THAY THẾ HÀM openModal CŨ BẰNG HÀM NÀY --- */
+        function openModal(type) {
+            const overlay = document.getElementById('modal-overlay');
+            const icon = document.getElementById('modal-icon');
+            const title = document.getElementById('modal-title');
+            const desc = document.getElementById('modal-desc');
+            const actions = document.getElementById('modal-actions');
+
+            // Hiển thị lớp phủ
+            overlay.classList.add('open');
+
+            if (type === 'done') {
+                // --- NỘI DUNG CHO NÚT "XONG" ---
+                icon.innerHTML = '<i class="fa fa-check"></i>'; // Icon tích v
+                title.innerText = 'Hoàn tất thiết kế?';
+                desc.innerText = 'Tuyệt vời! Bạn có muốn lưu hình ảnh này về máy ngay bây giờ không?';
+                
+                // Sửa lỗi tên biến ở đây: gán nội dung vào 'actions'
+                actions.innerHTML = `
+                    <button class="btn-modal btn-cancel" onclick="closeModal()">Đợi chút</button>
+                    <button class="btn-modal btn-confirm" onclick="chupAnhVaChuyenTrang()">Lưu ngay</button>
+                `;
+            } else {
+                // --- NỘI DUNG CHO NÚT "QUAY LẠI" ---
+                icon.innerHTML = '<i class="fa fa-exclamation-triangle"></i>'; // Icon cảnh báo
+                title.innerText = 'Bạn muốn thoát?';
+                desc.innerText = 'Cẩn thận nhé, nếu thoát bây giờ thì mọi chỉnh sửa nãy giờ sẽ mất hết đó!';
+                
+                actions.innerHTML = `
+                    <button class="btn-modal btn-cancel" onclick="closeModal()">Ở lại</button>
+                    <button class="btn-modal btn-confirm" style="background:#ff4d4d" onclick="window.location.href='mau-co-san.html'">Thoát luôn</button>
+                `;
+            }
+        }    
+        /* --- TÍNH NĂNG CẢM ỨNG MOBILE (PHIÊN BẢN TỐI ƯU V2) --- */
+        (function initMobileGestures() {
+            if (window.innerWidth > 768) return;
+
+            const workspace = document.getElementById('workspace');
+            const target = document.getElementById('artboard-wrapper');
+            const artboard = document.getElementById('artboard');
+
+            // 1. CĂN GIỮA MẶC ĐỊNH & KHỞI TẠO
+            if (artboard) {
+                artboard.style.transform = 'none';
+                artboard.style.width = '600px'; 
+                artboard.style.height = '600px';
+            }
+
+            // Tính toán vị trí giữa màn hình chính xác
+            // Trừ đi 60px (header) và 60px (bottom bar) để lấy vùng trống thực tế
+            const safeHeight = window.innerHeight - 120; 
+            const initialScale = 0.55; // Zoom vừa phải lúc đầu
+            
+            let state = {
+                scale: initialScale, 
+                // Công thức căn giữa: (Chiều rộng màn hình - Chiều rộng ảnh * Scale) / 2
+                posX: (window.innerWidth - 600 * initialScale) / 2,
+                // Căn giữa theo chiều dọc trong vùng an toàn
+                posY: (safeHeight - 600 * initialScale) / 2 + 20, 
+            };
+
+            let start = { x: 0, y: 0, dist: 0 };
+            let isZooming = false; // Cờ kiểm tra đang zoom hay đang kéo
+
+            // Hàm cập nhật hình ảnh (GPU Render)
+            function update() {
+                target.style.transform = `translate3d(${state.posX}px, ${state.posY}px, 0) scale(${state.scale})`;
+            }
+            
+            // Chạy ngay lần đầu để căn giữa
+            update();
+
+            // 2. XỬ LÝ CHẠM MÀN HÌNH (TOUCHSTART)
+            workspace.addEventListener('touchstart', function(e) {
+                // A. LOGIC BỎ CHỌN (DESELECT)
+                // Nếu chạm 1 ngón vào vùng trống (workspace) -> Bỏ chọn đối tượng
+                if (e.touches.length === 1 && e.target === workspace) {
+                    if(typeof deselect === 'function') deselect();
+                }
+
+                // B. LOGIC ĐIỀU KHIỂN
+                // Nếu chạm vào nút điều khiển thì bỏ qua
+                if (e.target.closest('.resize-handle') || e.target.closest('.rotate-handle')) return;
+                // Nếu chạm vào đối tượng (ảnh/chữ) thì để hàm makeDraggable lo
+                if (e.touches.length === 1 && e.target.closest('.movable-element')) return;
+
+                e.preventDefault(); 
+
+                if (e.touches.length === 2) {
+                    // Bắt đầu Zoom
+                    isZooming = true;
+                    start.dist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                } else {
+                    // Bắt đầu Pan (Di chuyển khung)
+                    // QUAN TRỌNG: Chỉ cho phép Pan khi KHÔNG vừa mới zoom xong (tránh giật)
+                    if (!isZooming) {
+                        start.x = e.touches[0].clientX - state.posX;
+                        start.y = e.touches[0].clientY - state.posY;
+                    }
+                }
+            }, { passive: false });
+
+            // 3. XỬ LÝ DI CHUYỂN (TOUCHMOVE)
+            workspace.addEventListener('touchmove', function(e) {
+                if (e.target.closest('.resize-handle') || e.target.closest('.rotate-handle')) return;
+                if (e.touches.length === 1 && e.target.closest('.movable-element')) return;
+
+                e.preventDefault();
+
+                if (e.touches.length === 2) {
+                    // --- LOGIC ZOOM MƯỢT ---
+                    isZooming = true;
+                    const dist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    
+                    if (start.dist > 0) {
+                        const delta = dist / start.dist;
+                        let newScale = state.scale * delta;
+                        
+                        // Giới hạn Zoom nhưng có độ trễ nhẹ (không giật cục khi chạm ngưỡng)
+                        if (newScale > 4.0) newScale = 4.0 + (newScale - 4.0) * 0.1;
+                        if (newScale < 0.25) newScale = 0.25 + (newScale - 0.25) * 0.1;
+                        
+                        // Cập nhật scale
+                        state.scale = newScale;
+                        start.dist = dist; // Reset dist để zoom liên tục mượt hơn
+                        update();
+                    }
+                } else if (e.touches.length === 1) {
+                    // --- LOGIC PAN (KÉO KHUNG) ---
+                    // Nếu cờ isZooming vẫn bật (do vừa nhấc 1 ngón ra), thì chặn nhảy toạ độ
+                    if (isZooming) return;
+
+                    state.posX = e.touches[0].clientX - start.x;
+                    state.posY = e.touches[0].clientY - start.y;
+                    update();
+                }
+            }, { passive: false });
+
+            // 4. KẾT THÚC CHẠM (TOUCHEND)
+            workspace.addEventListener('touchend', function(e) {
+                if (e.touches.length === 0) {
+                    // Khi nhấc hết tay ra, reset cờ zoom sau 100ms
+                    // Để tránh việc nhấc tay không đều làm khung bị nhảy
+                    setTimeout(() => { isZooming = false; }, 100);
+                    
+                    // Tự động đàn hồi nếu zoom quá lố (Bounce Back Effect)
+                    if (state.scale > 3.0) { state.scale = 3.0; update(); }
+                    if (state.scale < 0.3) { state.scale = 0.3; update(); }
+                }
+            });
+
+        })();    
+        /* --- HÀM MỚI: GIÚP MỞ CÁC BẢNG LAYER, VIỀN, ĐỘ TRONG SUỐT --- */
+        function togglePopup(popupId) {
+            // 1. Tìm cái bảng muốn mở (dựa vào ID)
+            const popup = document.getElementById(popupId);
+            if (!popup) return; // Nếu không thấy thì thôi
+
+            // 2. Kiểm tra xem nó đang mở hay đóng
+            const isActive = popup.classList.contains('active');
+
+            // 3. Đóng tất cả các bảng khác đang mở (để không bị chồng chéo)
+            // Tìm tất cả thẻ có class .popup-panel và tắt class 'active' đi
+            document.querySelectorAll('.popup-panel').forEach(p => {
+                p.classList.remove('active');
+            });
+
+            // 4. Nếu cái bảng mình bấm chưa mở -> Thì mở nó ra (thêm class active)
+            if (!isActive) {
+                popup.classList.add('active');
+                
+                // Mẹo nhỏ: Nếu là bảng Layer, cập nhật lại danh sách cho mới nhất
+                if (popupId === 'layers-popup') {
+                    renderLayerList();
+                }
+            }
+        }
+        /* --- HÀM CẬP NHẬT GIAO DIỆN THANH CÔNG CỤ (SỬA LỖI KHÔNG SÁNG ĐÈN) --- */
+        function updateTextToolbarValues() {
+            // Nếu chưa chọn chữ nào thì thoát, không làm gì cả
+            if (!selectedEl) return;
+
+            // Lấy thẻ chứa chữ bên trong khung
+            const span = selectedEl.querySelector('.text-content');
+            // Lấy toàn bộ style hiện tại của chữ đó (màu, font, độ đậm...)
+            const style = window.getComputedStyle(span);
+
+            // 1. Điền cỡ chữ vào ô nhập
+            document.getElementById('font-size-input').value = parseInt(style.fontSize);
+            
+            // 2. Hiển thị màu sắc hiện tại lên nút màu
+            document.getElementById('curr-color-preview').style.background = span.style.color || style.color;
+            
+            // 3. Hiển thị icon căn lề (Trái/Giữa/Phải)
+            let align = span.style.textAlign || 'left';
+            // Danh sách icon tương ứng
+            let iconClass = {
+                'left': 'fa-align-left',
+                'center': 'fa-align-center',
+                'right': 'fa-align-right',
+                'justify': 'fa-align-justify'
+            }[align];
+            if(iconClass) document.getElementById('align-icon-display').className = `fa ${iconClass}`;
+
+            // --- PHẦN QUAN TRỌNG: LÀM SÁNG NÚT BẤM ---
+            
+            // Kiểm tra In Đậm: Nếu font-weight là 700 hoặc bold -> Sáng nút B
+            const isBold = style.fontWeight === '700' || style.fontWeight === 'bold';
+            // classList.toggle nghĩa là: Nếu isBold đúng thì thêm class 'active-state', sai thì bỏ
+            document.getElementById('btn-bold').classList.toggle('active-state', isBold);
+
+            // Kiểm tra In Nghiêng: Nếu font-style là italic -> Sáng nút I
+            const isItalic = style.fontStyle === 'italic';
+            document.getElementById('btn-italic').classList.toggle('active-state', isItalic);
+
+            // Kiểm tra Gạch chân: Nếu có gạch chân -> Sáng nút U
+            const isUnderline = style.textDecorationLine.includes('underline') || style.textDecoration.includes('underline');
+            document.getElementById('btn-underline').classList.toggle('active-state', isUnderline);
+        }
+        /* --- HÀM XỬ LÝ KHI BẤM NÚT B, I, U --- */
+        function toggleFormat(fmt) {
+            if (!selectedEl) return;
+            const s = selectedEl.querySelector('.text-content').style;
+            
+            // Logic thay đổi style (Giống hệt cái cũ của bạn)
+            if(fmt==='bold') {
+                // Nếu đang đậm (700) thì về thường (400), ngược lại thì thành đậm
+                s.fontWeight = (s.fontWeight==='700'||s.fontWeight==='bold') ? '400' : '700';
+            }
+            if(fmt==='italic') {
+                s.fontStyle = (s.fontStyle==='italic') ? 'normal' : 'italic';
+            }
+            if(fmt==='underline') {
+                // Nếu đang có gạch chân thì bỏ, chưa có thì thêm
+                if (s.textDecoration.includes('underline')) s.textDecoration = 'none';
+                else s.textDecoration = 'underline';
+            }
+
+            // --- QUAN TRỌNG: Gọi ngay hàm ở Bước 2 để đèn nút sáng lên ---
+            updateTextToolbarValues();
+            
+            // Lưu lại lịch sử để còn Undo được
+            saveState();
+        }
+        /* --- LOGIC CHỌN FONT MỚI --- */
+
+        // Thêm tham số 'e' vào trong ngoặc
+        function toggleFontMenu(e) {
+            const menu = document.getElementById('font-list-menu');
+            
+            // Toggle class 'show' để hiện hoặc ẩn
+            menu.classList.toggle('show');
+            
+            // Sử dụng biến 'e' được truyền vào thay vì 'event'
+            if (e) e.stopPropagation();
+        }        
+        // 2. Hàm thay đổi font chữ khi người dùng bấm chọn
+        function changeFont(fontName) {
+            if (!selectedEl) return;
+            
+            // Lưu lại lịch sử undo
+            saveState();
+            
+            // Áp dụng font cho phần tử text
+            const content = selectedEl.querySelector('.text-content');
+            content.style.fontFamily = fontName;
+            
+            // Cập nhật tên hiển thị trên thanh toolbar cho người dùng biết
+            const displaySpan = document.getElementById('display-font-name');
+            displaySpan.innerText = fontName;
+            // Cập nhật font cho chính cái tên đó để nhìn trực quan
+            displaySpan.style.fontFamily = fontName;
+            
+            // Đóng menu sau khi chọn
+            document.getElementById('font-list-menu').classList.remove('show');
+        }
+
+        // 3. Đóng menu font khi click ra ngoài vùng chọn
+        window.addEventListener('click', function(e) {
+            const menu = document.getElementById('font-list-menu');
+            const btn = document.querySelector('.font-selector-group');
+            
+            // Nếu click ra ngoài nút chọn font thì đóng menu
+            if (menu && menu.classList.contains('show') && !btn.contains(e.target)) {
+                menu.classList.remove('show');
+            }
+        });
+        /* --- TÍNH NĂNG XOÁ BẰNG BÀN PHÍM (BACKSPACE / DELETE) --- */
+        window.addEventListener('keydown', function(e) {
+            // 1. Kiểm tra xem người dùng có đang bấm phím Xoá không
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+
+                // 2. Nếu không có đối tượng nào được chọn -> Không làm gì cả
+                if (!selectedEl) return;
+
+                // 3. [QUAN TRỌNG] Kiểm tra xem người dùng có đang nhập liệu không?
+                // Nếu đang gõ trong ô Input (ví dụ: nhập cỡ chữ, nhập zoom) -> Để họ xoá số, đừng xoá ảnh
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                // Nếu là Văn bản và đang ở chế độ "Sửa chữ" (có con trỏ nhấp nháy) -> Để họ xoá chữ
+                if (selectedEl.dataset.type === 'text') {
+                    const content = selectedEl.querySelector('.text-content');
+                    // isContentEditable là thuộc tính cho biết chữ có đang được sửa hay không
+                    if (content && content.isContentEditable) return; 
+                }
+
+                // 4. Nếu vượt qua mọi bài kiểm tra trên -> Thực hiện lệnh xoá
+                e.preventDefault(); // Ngăn trình duyệt quay lại trang trước (nếu có)
+                deleteSelected();   // Gọi lại hàm xoá có sẵn của bạn
+            }
+        });
+        /* --- HÀM GÁN HIỆU ỨNG NỔI BẬT --- */
+        function addHighlightEffect(el) {
+            // 1. Thêm class tạo hiệu ứng nhấp nháy
+            el.classList.add('new-item-highlight');
+
+            // 2. Định nghĩa hàm gỡ bỏ hiệu ứng
+            const removeEffect = () => {
+                el.classList.remove('new-item-highlight');
+                // Gỡ sự kiện để không chạy lại lần sau (tiết kiệm bộ nhớ)
+                el.removeEventListener('mousedown', removeEffect);
+                el.removeEventListener('touchstart', removeEffect);
+            };
+
+            // 3. Khi người dùng chạm vào hoặc click chuột -> Tắt hiệu ứng ngay
+            el.addEventListener('mousedown', removeEffect);
+            el.addEventListener('touchstart', removeEffect);
+        }
+    </script>
+</body>
+</html>

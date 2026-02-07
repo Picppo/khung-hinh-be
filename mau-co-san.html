@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mẫu Có Sẵn - Khung Hình Bé</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root { --purple-color: #a29bfe; --bg-gradient: linear-gradient(135deg, #87CEEB 0%, #a29bfe 100%); }
+        
+        @font-face {
+            font-family: '1FTV-Christmas-Dream';
+            src: url('assets/1FTV-Christmas-Dream.otf') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        /* Cho phép cuộn trang tự nhiên */
+        body { 
+            margin: 0; 
+            font-family: 'Montserrat', sans-serif; 
+            background: #f4f7f6; 
+            min-height: 100vh;
+            overflow-y: auto; 
+        }
+        
+        /* 1. Sửa Header: Bỏ z-index âm và chỉnh padding */
+        header { 
+            background: var(--bg-gradient); 
+            padding: 15px 20px 5px; 
+            text-align: center; 
+            color: white; 
+            position: relative;
+            z-index: 10; /* Đặt z-index dương để nút bấm có thể click được */
+        }
+
+        /* 2. Sửa Tiêu đề: Tách riêng khỏi header */
+        header h1 {
+            font-family: '1FTV-Christmas-Dream', sans-serif;
+            font-size: 3rem;
+            margin: 0;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* --- NÚT QUAY LẠI MỚI --- */
+        .back-btn { 
+            position: absolute; 
+            top: 30px; 
+            left: 30px; 
+            
+            /* Thiết kế nút to và đẹp hơn */
+            background: rgba(255, 255, 255, 0.2); /* Nền trắng mờ */
+            backdrop-filter: blur(10px); /* Hiệu ứng kính mờ phía sau */
+            padding: 12px 25px; /* Tăng độ rộng để nút to hơn */
+            border-radius: 50px; /* Bo tròn hình viên thuốc */
+            border: 2px solid rgba(255, 255, 255, 0.6); /* Viền mỏng sang trọng */
+            
+            color: white; 
+            text-decoration: none; 
+            font-size: 1rem; /* Chữ to hơn một chút */
+            font-weight: 800; /* Chữ đậm */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+            transition: all 0.3s ease; /* Hiệu ứng mượt mà */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Hiệu ứng khi di chuột vào */
+        .back-btn:hover {
+            background: white; /* Nền chuyển sang trắng hẳn */
+            color: #6c5ce7; /* Chữ chuyển màu tím */
+            transform: translateY(-3px) scale(1.05); /* Nút bay lên nhẹ và to ra */
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            border-color: white;
+        }
+        /* 4. Sửa Container: Bỏ margin âm để không đè lên nút bấm */
+        .container { 
+            max-width: 1100px; 
+            margin: 20px auto 50px; /* Đổi -40px thành 20px dương */
+            padding: 0 15px; 
+            position: relative;
+        }
+
+        /* Hệ thống lưới linh hoạt */
+        .template-grid { 
+            display: grid; 
+            /* PC: Tự động chia cột đều nhau tối thiểu 280px */
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+            gap: 25px; 
+        }
+        @media (min-width: 1024px) {
+            .template-grid {
+                /* Lệnh repeat(6, 1fr) nghĩa là: Chia làm 6 cột đều nhau */
+                grid-template-columns: repeat(6, 1fr); 
+            }
+        }
+
+        /* 2. DÀNH CHO TABLET & ĐIỆN THOẠI */
+        @media (max-width: 1023px) {
+            .template-grid {
+                /* Giữ nguyên cơ chế tự động co giãn cho màn hình nhỏ */
+                /* Trên điện thoại sẽ tự thành 2 cột */
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+                gap: 10px;
+            }
+        }
+
+        /* Thêm vào phần <style> */
+        .template-card.selected {
+            border: 3px solid #fff;
+            box-shadow: 0 0 20px 5px rgba(162, 155, 254, 0.8); /* Hiệu ứng sáng đèn màu tím nhẹ */
+            transform: scale(1.02);
+            z-index: 10;
+        }
+
+        .template-card { 
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .template-card:hover { transform: translateY(-8px); }
+
+        /* --- CSS CHO LƯỚI KHUNG HÌNH (SỬA LẠI) --- */
+
+        /* 1. Thiết lập lại thẻ card chứa khung */
+        .template-card.frame-display {
+            background: transparent; /* Bỏ nền trắng */
+            box-shadow: none; /* Bỏ bóng đổ hình chữ nhật */
+            border: none; /* Bỏ viền */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Hiệu ứng nảy */
+        }
+
+        /* 2. Hiệu ứng Hover đẹp mắt khi di chuột vào */
+        .template-card.frame-display:hover {
+            transform: translateY(-10px) scale(1.05); /* Bay lên và phóng to nhẹ */
+            filter: drop-shadow(0 15px 30px rgba(108, 92, 231, 0.4)); /* Đổ bóng phát sáng theo hình dáng khung */
+            z-index: 5;
+        }
+
+        /* 3. Hộp chứa ảnh - Đảm bảo gọn gàng trong lưới */
+        .image-box {
+            width: 100%;
+            /* Aspect-ratio 1/1 tạo ô vuông đều nhau cho lưới gọn gàng */
+            aspect-ratio: 1 / 1; 
+            background: transparent; /* Quan trọng: Nền trong suốt */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px; /* Khoảng cách đệm để khung không dính sát lề */
+            border-radius: 20px;
+            /* Nếu muốn có nền mờ nhẹ đằng sau khung để dễ nhìn hơn thì bỏ comment dòng dưới */
+            /* background: rgba(255, 255, 255, 0.5); */
+        }
+
+        /* 4. Ảnh hiển thị - "Chìa khóa" để thấy toàn bộ chi tiết */
+        .image-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* QUAN TRỌNG: Giúp ảnh hiện FULL, không bị cắt, dù là hình tròn hay dài */
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); /* Bóng đổ nhẹ cho chính cái khung */
+            transition: transform 0.3s;
+        }
+
+        /* Giữ nguyên CSS của .create-card cũ vì nó vẫn đẹp */
+        .card-info { padding: 15px; text-align: center; }
+        .card-info h3 { margin: 0; font-size: 0.95rem; color: #333; }
+        
+        .use-this-btn { 
+            display: block; 
+            padding: 12px 0; 
+            background: var(--purple-color); 
+            color: white; 
+            text-decoration: none; 
+            margin-top: 12px; 
+            border-radius: 10px; 
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-align: center;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .use-this-btn:active {
+            transform: scale(0.95); /* Hiệu ứng lún xuống khi bấm trên điện thoại */
+            background: #8e84f5;
+        }
+
+        /* Hiệu ứng hover cho ô tạo mới */
+        .create-card:hover {
+            background: #f0f3ff;
+            border-color: #6c5ce7;
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        .create-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 2;
+        }
+
+        .create-title {
+            font-weight: 800;
+            color: #6c5ce7;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .plus-circle {
+            width: 60px;
+            height: 60px;
+            background: var(--bg-gradient);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+            transition: transform 0.3s;
+        }
+
+        .create-card:hover .plus-circle {
+            transform: rotate(90deg); /* Xoay dấu cộng khi di chuột */
+        }
+
+        /* Sticker trang trí cute */
+        .sticker {
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0.6;
+            color: #ff7675;
+            animation: float 3s ease-in-out infinite;
+        }
+        .sticker-1 { top: 20px; left: 20px; color: #ffeaa7; transform: rotate(-15deg); }
+        .sticker-2 { bottom: 20px; right: 20px; color: #ff7675; transform: rotate(15deg); }
+        .sticker-3 { top: 40%; right: 10px; color: #74b9ff; font-size: 1rem; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        /* --- CSS CHO MODAL THÔNG BÁO --- */
+        .modal-overlay {
+            display: none; /* Ẩn mặc định */
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Nền tối mờ */
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px); /* Làm mờ nền đằng sau */
+        }
+
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            animation: popup 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popup {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px; right: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #aaa;
+            line-height: 20px;
+        }
+        .close-btn:hover { color: #ff7675; }
+
+        .modal-title { color: #6c5ce7; margin-bottom: 5px; font-size: 1.8rem; }
+        .modal-subtitle { color: #888; margin-bottom: 25px; font-size: 0.9rem; }
+
+        /* Grid 3 option */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        /* --- 1. CSS CHO BANNER TẠO MỚI (HÌNH CHỮ NHẬT) --- */
+        .create-banner {
+            width: 100%;
+            max-width: 800px; /* Độ rộng vừa phải */
+            height: 100px;    /* Chiều cao cố định hình chữ nhật */
+            margin: 0 auto 30px; /* Canh giữa và cách menu bên dưới */
+            background: white;
+            border: 3px dashed #a29bfe;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .create-banner:hover {
+            transform: translateY(-5px);
+            border-color: #6c5ce7;
+            background: #f4f1ff;
+        }
+
+        .banner-content {
+            display: flex;
+            align-items: center;
+            gap: 20px; /* Khoảng cách giữa nút cộng và chữ */
+        }
+
+        .create-banner .plus-circle {
+            width: 50px; height: 50px;
+            background: var(--bg-gradient);
+            border-radius: 50%;
+            color: white;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
+        }
+
+        .create-banner .create-title {
+            font-size: 1.4rem;
+            color: #6c5ce7;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        /* --- 2. CSS CHO THANH DANH MỤC (MENU) --- */
+        .category-menu {
+            display: flex;
+            justify-content: center;
+            gap: 15px; /* Khoảng cách giữa các nút */
+            margin-bottom: 30px;
+            flex-wrap: wrap; /* Tự xuống dòng trên điện thoại nhỏ */
+        }
+
+        .cat-btn {
+            padding: 10px 25px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 50px; /* Bo tròn như viên thuốc */
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .cat-btn:hover {
+            background: #f9f9f9;
+            border-color: #a29bfe;
+            transform: translateY(-2px);
+        }
+
+        /* Trạng thái nút đang được chọn */
+        .cat-btn.active {
+            background: var(--bg-gradient);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+        }
+        .option-item {
+            background: #f8f9fa;
+            border: 2px solid #eee;
+            border-radius: 15px;
+            aspect-ratio: 1/1; /* Hình vuông */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            color: #555;
+        }
+        /* --- CSS CHO PHẦN TRANG TRÍ (ĐÃ CẬP NHẬT) --- */
+        .decor-container {
+            position: absolute; /* QUAN TRỌNG: Đổi từ fixed sang absolute để cuộn theo trang */
+            top: 0; left: 0;
+            width: 100%; 
+            height: 100%;
+            pointer-events: none; 
+            z-index: 15; /* QUAN TRỌNG: Cao hơn Header (10) để không bị che, nhưng thấp hơn nút Quay lại (100) */
+            overflow: hidden;
+        }
+
+        /* 1. Thiết lập chung cho Sticker */
+        .decor-sticker {
+            position: absolute;
+            opacity: 1; /* Tăng độ rõ lên 100% cho đẹp */
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.15));
+            /* Đã xóa dòng animation: floatSticker... để hết lơ lửng */
+        }
+
+        /* Sticker chữ "Be Creative" - Bên trái, nằm chồm lên ô tạo mới */
+        .sticker-left-main {
+            width: 150px; 
+            top: 10px;   /* Đẩy xuống vị trí gần ô đầu tiên */
+            left: 300px;  /* Thò ra từ mép trái */
+            transform: rotate(-10deg);
+        }
+
+        /* Sticker Bóng đèn - Góc phải trên Header */
+        .sticker-right-top {
+            width: 100px;
+            top: 10px;    /* Nằm gọn trong vùng tím của Header */
+            right: 20px;  /* Cách lề phải */
+            transform: rotate(10deg);
+        }
+        /* ĐIỀU CHỈNH CHO MOBILE */
+        @media (max-width: 768px) {
+            /* 1. Header thu gọn tối đa */
+            header { 
+                padding: 10px 15px 20px; /* Giảm khoảng cách đệm */
+                height: auto;
+            }
+            
+            /* Chữ tiêu đề "MẪU CÓ SẴN" bé lại và đẩy xuống xíu để né nút Back */
+            header h1 { 
+                font-size: 1.8rem; 
+                margin-top: 40px; 
+                line-height: 1.2;
+                position: relative;    /* Bắt buộc có để chỉnh lớp */
+                z-index: 10;           /* Cao hơn bút chì (z-index: 0) */
+            }
+            
+            /* Ẩn luôn dòng chữ nhỏ "Khám phá..." cho đỡ chật (nếu muốn) hoặc để font nhỏ */
+            header p { font-size: 0.8rem; margin-top: 5px; opacity: 0.9; }
+
+            /* 2. Nút Quay Lại: Nhỏ, gọn, đưa sát góc trái */
+            .back-btn {
+                top: 15px;      /* Cách mép trên 15px */
+                left: 15px;     /* Cách mép trái 15px */
+                padding: 8px 15px; /* Nút bé lại */
+                font-size: 0.75rem; /* Chữ bé lại */
+                border-width: 1px;
+                background: rgba(255, 255, 255, 0.2); /* Nền mờ nhẹ */
+            }
+
+            /* 3. Banner "Tạo thiết kế mới": Thu nhỏ và đưa sát lên header */
+            .container { 
+                margin-top: 15px; /* Kéo sát lên header (cách 15px) */
+                padding: 0 15px;  /* Cách lề 2 bên màn hình một chút */
+            }
+            
+            .create-banner {
+                height: 60px; /* Giảm chiều cao từ 100px xuống 60px */
+                margin-bottom: 20px;
+                max-width: 100%;
+            }
+
+            /* Chỉnh chữ và icon trong banner bé lại cho cân đối */
+            .create-banner .create-title { font-size: 1rem; }
+            .create-banner .plus-circle { width: 35px; height: 35px; font-size: 1rem; }
+            
+            /* Ẩn bớt sticker trang trí để không bị che chữ */
+            .create-banner .sticker { display: none; }
+
+            /* 4. Menu Danh mục: Chia thành 2 dòng (2 trên - 2 dưới) */
+            .category-menu {
+                display: grid; /* Chuyển sang chế độ lưới */
+                grid-template-columns: 1fr 1fr; /* Chia 2 cột đều nhau (50% - 50%) */
+                gap: 10px; /* Khoảng cách giữa các nút */
+                width: 100%;
+            }
+            
+            .cat-btn {
+                width: 100%; /* Nút dãn hết cỡ ô lưới */
+                padding: 8px 0; /* Mỏng lại */
+                font-size: 0.85rem;
+                margin: 0; /* Bỏ margin thừa */
+            }
+
+            /* 5. Lưới hiển thị ảnh (Giữ nguyên 2 cột như cũ) */
+            .template-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 10px; 
+            }
+            
+            /* Điều chỉnh chữ trong thẻ bài */
+            .card-info h3 { font-size: 0.8rem; }
+            .use-this-btn { font-size: 0.7rem; padding: 10px 0; }
+            /* --- CHỈNH SỬA STICKER TRÊN ĐIỆN THOẠI --- */
+    
+            /* 1. Sticker "Let's Create" (Cây bút bên trái) */
+            .sticker-left-main {
+                display: none;
+                width: 70px;           /* Kích thước: Giảm từ 150px xuống 80px */
+                top: 60px;             /* Vị trí dọc: Cách mép trên 60px */
+                right: 10px;           /* Vị trí ngang: Thò ra ngoài mép trái một chút */
+                transform: rotate(-5deg);; /* Độ xoay: Xoay nhẹ -5 độ */
+            }
+
+            /* 2. Sticker Bóng đèn (Góc phải trên) */
+            .sticker-right-top {
+                width: 70px;           /* Kích thước bé lại */
+                top: 5px;              /* Cách mép trên */
+                right: 10px;           /* Cách mép phải */
+                transform: rotate(10deg); /* Độ xoay */
+            }
+
+            /* 3. Sticker còn lại (Góc phải dưới - nếu có) */
+            .sticker-right-bottom {
+                width: 60px;           
+                top: auto;             /* Bỏ căn lề trên */
+                bottom: 10px;          /* Chuyển xuống dưới cùng màn hình (nếu muốn) */
+                right: -10px;          
+                opacity: 0.2;   
+                z-index: 0;       /* Làm mờ bớt nếu sợ rối mắt */
+            }
+        }
+        /* Sticker Bút chì - Góc phải dưới Header (Nằm ngay dưới bóng đèn) */
+        .sticker-right-bottom {
+            width: 150px;
+            top: 10px;   /* Nằm ngay mép dưới của Header */
+            right: 220px;
+            transform: rotate(-15deg);
+        }
+
+        .option-icon { font-size: 2rem; margin-bottom: 10px; color: #a29bfe; }
+        .option-item span { font-weight: bold; font-size: 0.9rem; }
+
+        /* Sticker nhỏ trong option */
+        .option-sticker {
+            position: absolute;
+            top: 5px; right: 5px;
+            font-size: 0.8rem;
+            color: #ff9ff3;
+        }
+
+        /* Hover effect cho option */
+        .option-item:hover {
+            background: #fff;
+            border-color: #a29bfe;
+            box-shadow: 0 5px 15px rgba(162, 155, 254, 0.4);
+            transform: translateY(-5px);
+            color: #6c5ce7;
+        }
+        /* --- CSS CHO PHẦN TRANG TRÍ --- */
+
+        /* Hiệu ứng bay nhè nhẹ */
+        @keyframes floatSticker {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+
+        /* 2. Vẽ đường Line Background (Nét cọ mỏng hiện đại) */
+        .bg-line {
+            position: absolute;
+            border: 2px solid rgba(255, 255, 255, 0.4); /* Màu trắng mờ rất mỏng */
+            border-radius: 50%; /* Bo tròn */
+            z-index: -1;
+        }
+
+        /* Đường cong lớn góc trái trên */
+        .line-1 {
+            width: 600px; height: 600px;
+            top: -200px; left: -200px;
+            border-color: rgba(162, 155, 254, 0.2); /* Màu tím nhạt */
+            border-width: 1px;
+        }
+
+        /* Đường cong góc phải dưới */
+        .line-2 {
+            width: 500px; height: 500px;
+            bottom: -100px; right: -100px;
+            border: 1px dashed rgba(108, 92, 231, 0.2); /* Nét đứt */
+        }
+
+        /* Đường uốn lượn giữa màn hình */
+        .line-3 {
+            width: 800px; height: 800px;
+            top: 40%; left: 30%;
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; /* Tạo hình méo tự nhiên */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: rotateLine 20s linear infinite;
+        }
+
+        @keyframes rotateLine {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        /* --- CSS CHO MÀN HÌNH CHỜ (LOADING) --- */
+        .loading-screen {
+            display: none; /* Mặc định ẩn */
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95); /* Nền trắng mờ sang trọng */
+            z-index: 10000; /* Cao nhất để che hết mọi thứ */
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-box {
+            text-align: center;
+            position: relative;
+        }
+
+        /* Icon đũa thần ở giữa */
+        .main-icon {
+            font-size: 4rem;
+            color: #6c5ce7; /* Màu tím chủ đạo */
+            margin-bottom: 20px;
+            animation: bounceIcon 1s infinite alternate; /* Hiệu ứng nhún */
+        }
+
+        @keyframes bounceIcon {
+            from { transform: translateY(0) scale(1); }
+            to { transform: translateY(-15px) scale(1.1); text-shadow: 0 10px 20px rgba(108, 92, 231, 0.4); }
+        }
+
+        /* Chữ thông báo */
+        .loading-text {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #333;
+            font-family: 'Montserrat', sans-serif;
+            animation: pulseText 1.5s infinite;
+        }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Sticker trang trí bay xung quanh */
+        .float-sticker {
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0.8;
+        }
+
+        /* Vị trí và màu sắc từng sticker */
+        .s1 { top: -20px; right: -30px; color: #ffeaa7; animation: spin 3s linear infinite; }
+        .s2 { bottom: -10px; left: -30px; color: #ff7675; animation: floatSticker 2s ease-in-out infinite; }
+        .s3 { top: 50%; right: -50px; color: #74b9ff; font-size: 1rem; animation: floatSticker 2.5s ease-in-out infinite reverse; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* === CSS CHO THÔNG BÁO BẢO TRÌ (MỚI) === */
+        .maintenance-overlay {
+            display: none; /* Mặc định ẩn */
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(162, 155, 254, 0.4); /* Màu tím nhạt mờ */
+            backdrop-filter: blur(8px); /* Làm mờ nền đằng sau rất hiện đại */
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .maintenance-box {
+            background: white;
+            width: 90%;
+            max-width: 420px;
+            padding: 40px 30px;
+            border-radius: 30px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(108, 92, 231, 0.2);
+            /* Hiệu ứng nảy khi xuất hiện */
+            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        /* Icon cờ lê to bự */
+        .maintenance-icon {
+            font-size: 4rem;
+            color: #a29bfe;
+            margin-bottom: 20px;
+            animation: wiggle 2s infinite ease-in-out;
+        }
+
+        .maintenance-title {
+            font-family: 'Montserrat', sans-serif;
+            color: #6c5ce7;
+            font-size: 1.6rem;
+            margin: 0 0 10px;
+            font-weight: 800;
+        }
+
+        .maintenance-desc {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        /* Nút bấm cute */
+        .got-it-btn {
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+            transition: transform 0.2s;
+        }
+        .got-it-btn:active { transform: scale(0.95); }
+
+        /* Nút đóng X */
+        .close-main-btn {
+            position: absolute;
+            top: 15px; right: 20px;
+            font-size: 2rem;
+            color: #ccc;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .close-main-btn:hover { color: #ff7675; }
+
+        /* Sticker trang trí */
+        .m-sticker {
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0.8;
+        }
+        .s-1 { top: -15px; left: -15px; color: #ffeaa7; transform: rotate(-20deg); font-size: 2rem;}
+        .s-2 { bottom: 20px; right: -10px; color: #ff7675; transform: rotate(15deg); }
+        .s-3 { top: 30px; left: 10px; color: #74b9ff; font-size: 1rem; opacity: 0.5; }
+
+        /* Hiệu ứng hoạt hình */
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+    </style>
+</head>
+<body>
+    <div class="decor-container">
+        <img src="assets/sticker-1.png" class="decor-sticker sticker-left-main">
+        <img src="assets/sticker-3.png" class="decor-sticker sticker-right-top">
+        <img src="assets/sticker-2.png" class="decor-sticker sticker-right-bottom">
+        </div>
+    <header>
+        <a href="index.html" class="back-btn"><i class="fa fa-arrow-left"></i> QUAY LẠI</a>
+        <h1>MẪU CÓ SẴN</h1>
+        <p>Khám phá kho khung hình độc đáo</p>
+    </header>
+
+    <div class="container">
+        
+        <div class="create-banner" onclick="toggleMaintenance(true)">            
+            <i class="fa-solid fa-star sticker sticker-1"></i>
+            <i class="fa-solid fa-heart sticker sticker-2"></i>
+            
+            <div class="banner-content">
+                <div class="plus-circle"><i class="fa-solid fa-plus"></i></div>
+                <span class="create-title">TẠO THIẾT KẾ MỚI</span>
+            </div>
+        </div>
+
+        <div class="category-menu">
+            <button class="cat-btn active" onclick="filterFrames('all', this)">Tất cả</button>
+            <button class="cat-btn" onclick="filterFrames('1', this)">1 Ảnh</button>
+            <button class="cat-btn" onclick="filterFrames('3', this)">3 Ảnh</button>
+            <button class="cat-btn" onclick="filterFrames('4', this)">4 Ảnh</button>
+        </div>
+
+        <div class="template-grid">   
+            <div class="template-card frame-display" data-type="1" onclick="goToEditor('khung-3.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3.png" alt="Khung 1 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="1" onclick="goToEditor('khung-4.png')">
+                <div class="image-box">
+                    <img src="assets/khung-4.png" alt="Khung 1 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="1" onclick="goToEditor('khung-5.png')">
+                <div class="image-box">
+                    <img src="assets/khung-5.png" alt="Khung 1 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="1" onclick="goToEditor('khung-6.png')">
+                <div class="image-box">
+                    <img src="assets/khung-6.png" alt="Khung 1 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="1" onclick="goToEditor('khung-7.png')">
+                <div class="image-box">
+                    <img src="assets/khung-7.png" alt="Khung 1 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="1" onclick="goToEditor('khung-8.png')">
+                <div class="image-box">
+                    <img src="assets/khung-8.png" alt="Khung 1 ảnh">
+                </div>
+            </div><div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-1.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-1.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-2.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-2.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-3.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-3.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="1" onclick="goToEditor('khung-9.png')">
+                <div class="image-box">
+                    <img src="assets/khung-9.png" alt="Khung 1 ảnh">
+                </div>
+            </div>
+             <div class="template-card frame-display" data-type="4" onclick="goToEditor('khung4anh-3.png')">
+                <div class="image-box">
+                    <img src="assets/khung4anh-3.png" alt="Khung 4 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="4" onclick="goToEditor('khung4anh-6.png')">
+                <div class="image-box">
+                    <img src="assets/khung4anh-6.png" alt="Khung 4 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="4" onclick="goToEditor('khung4anh-5.png')">
+                <div class="image-box">
+                    <img src="assets/khung4anh-5.png" alt="Khung 4 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="4" onclick="goToEditor('khung4anh-2.png')">
+                <div class="image-box">
+                    <img src="assets/khung4anh-2.png" alt="Khung 4 ảnh">
+                </div>
+            </div>  
+            <div class="template-card frame-display" data-type="4" onclick="goToEditor('khung4anh-1.png')">
+                <div class="image-box">
+                    <img src="assets/khung4anh-1.png" alt="Khung 4 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-13.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-13.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-12.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-12.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-11.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-11.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-10.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-10.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-9.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-9.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-8.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-8.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-7.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-7.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-6.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-6.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-5.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-5.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+             <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-14.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-14.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-15.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-15.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-16.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-16.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+            <div class="template-card frame-display" data-type="3" onclick="goToEditor('khung-3-anh-17.png')">
+                <div class="image-box">
+                    <img src="assets/khung-3-anh-17.png" alt="Khung 3 ảnh">
+                </div>
+            </div>
+        </div>
+    </div>    
+    <div id="optionModal" class="modal-overlay">
+        <div class="modal-box">
+            <span class="close-btn" onclick="toggleModal(false)">&times;</span>
+            <h2 class="modal-title">Chọn Kiểu Khung</h2>
+            <p class="modal-subtitle">Bạn muốn ghép bao nhiêu ảnh?</p>
+            
+            <div class="options-grid">
+                <div class="option-item" onclick="selectLayout(1)">
+                    <i class="fa-solid fa-image option-icon"></i>
+                    <span>1 Ảnh</span>
+                    <i class="fa-solid fa-heart option-sticker"></i>
+                </div>
+                                
+                <div class="option-item" onclick="selectLayout(3)">
+                    <div style="display:flex; gap:2px; justify-content:center; align-items:center;">
+                        <i class="fa-solid fa-image" style="font-size: 1rem;"></i>
+                        <i class="fa-solid fa-image" style="font-size: 1rem;"></i>
+                        <i class="fa-solid fa-image" style="font-size: 1rem;"></i>
+                    </div>
+                    <span>3 Ảnh</span>
+                    <i class="fa-solid fa-face-smile option-sticker"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="loading-overlay" class="loading-screen">
+        <div class="loading-box">
+            <i class="fa-solid fa-wand-magic-sparkles main-icon"></i>
+            <p class="loading-text">Đang chuẩn bị khung xinh...</p>
+            <i class="fa-solid fa-star float-sticker s1"></i>
+            <i class="fa-solid fa-heart float-sticker s2"></i>
+            <i class="fa-solid fa-cloud float-sticker s3"></i>
+        </div>
+    </div> 
+    <div id="maintenance-modal" class="maintenance-overlay" onclick="closeMaintenance(event)">
+        <div class="maintenance-box">
+            <span class="close-main-btn" onclick="toggleMaintenance(false)">&times;</span>
+            
+            <div class="maintenance-icon">
+                <i class="fa-solid fa-screwdriver-wrench"></i>
+            </div>
+
+            <h2 class="maintenance-title">Đang Nâng Cấp Nè!</h2>
+            <p class="maintenance-desc">
+                Tính năng <b>Tự Thiết Kế</b> đang được chúng mình bảo trì để xịn xò hơn. 
+                <br>Bạn quay lại sau nha!
+            </p>
+
+            <button class="got-it-btn" onclick="toggleMaintenance(false)">Oki, mình đợi được!</button>
+
+            <i class="fa-solid fa-star m-sticker s-1"></i>
+            <i class="fa-solid fa-heart m-sticker s-2"></i>
+            <i class="fa-solid fa-rocket m-sticker s-3"></i>
+        </div>
+    </div>
+    <script>
+        // 1. Hàm bật/tắt Modal (Giữ nguyên)
+        function toggleModal(show) {
+            const modal = document.getElementById('optionModal');
+            if (show) modal.style.display = 'flex';
+            else modal.style.display = 'none';
+        }
+
+        // 2. Đóng modal khi bấm ra ngoài (Giữ nguyên)
+        window.onclick = function(event) {
+            const modal = document.getElementById('optionModal');
+            if (event.target == modal) modal.style.display = "none";
+        }
+
+        // 3. Hàm chọn layout (Giữ nguyên)
+        function selectLayout(photoCount) {
+            alert("Tính năng đang phát triển cho " + photoCount + " ảnh");
+            toggleModal(false);
+        }
+
+        // 4. HÀM CHUYỂN TRANG MỚI (CÓ HIỆU ỨNG LOADING)
+        function goToEditor(frameFileName) {
+            console.log("Đang chọn khung: " + frameFileName);
+            
+            // 1. Hiện màn hình chờ lên
+            const loader = document.getElementById('loading-overlay');
+            loader.style.display = 'flex'; // Chuyển từ ẩn sang hiện (flex để căn giữa)
+
+            // 2. Đợi 1.2 giây cho người dùng ngắm hiệu ứng
+            setTimeout(function() {
+                // 3. Sau khi đợi xong thì mới chuyển trang
+                window.location.href = `tu-thiet-ke.html?frame=${frameFileName}`;
+            }, 1200); // 1200ms = 1.2 giây
+        }        
+        // Hàm lọc khung ảnh
+        function filterFrames(type, btnElement) {
+            // 1. Đổi màu nút bấm (Active styling)
+            // Xóa class active ở tất cả các nút
+            document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+            // Thêm class active vào nút vừa bấm
+            btnElement.classList.add('active');
+
+            // 2. Ẩn/Hiện các khung hình
+            const frames = document.querySelectorAll('.template-card.frame-display');
+            
+            frames.forEach(card => {
+                // Lấy loại của khung hiện tại (1, 2, hoặc 3)
+                const frameType = card.getAttribute('data-type');
+
+                if (type === 'all' || frameType === type) {
+                    // Nếu chọn 'Tất cả' HOẶC loại khung trùng với loại đang chọn -> Hiện
+                    card.style.display = 'flex';
+                } else {
+                    // Ngược lại -> Ẩn
+                    card.style.display = 'none';
+                }
+            });
+        }
+        // === HÀM BẬT/TẮT THÔNG BÁO BẢO TRÌ ===
+        function toggleMaintenance(show) {
+            const modal = document.getElementById('maintenance-modal');
+            if (show) {
+                modal.style.display = 'flex';
+            } else {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Đóng khi bấm ra ngoài vùng trắng
+        function closeMaintenance(event) {
+            const modal = document.getElementById('maintenance-modal');
+            // Nếu cái người dùng click vào chính là cái nền mờ (overlay)
+            if (event.target === modal) {
+                toggleMaintenance(false);
+            }
+        }
+    </script>
+</body>
+</html>
